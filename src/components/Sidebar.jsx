@@ -32,7 +32,7 @@ export default function Sidebar() {
     <Box
       component="nav"
       sx={{
-        width: 180,
+        width: 200,
         bgcolor: '#fff',
         height: '100vh',
         borderRight: '1px solid #eee',

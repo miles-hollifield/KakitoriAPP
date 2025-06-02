@@ -19,6 +19,7 @@ export default function Header() {
       left: 0,
       right: 0,
       zIndex: 200,
+      color: '#000'
     }}>
       <Link to="/" style={{ textDecoration: 'none' }}>
         <Typography variant="h5" sx={{ 
