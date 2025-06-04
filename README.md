@@ -78,7 +78,26 @@ Before you begin, make sure you have the following software installed:
 - If you have issues with ports, make sure nothing else is running on port 5173 or change the port in `vite.config.js`.
 
 ## Contributing
-- Please use feature branches and submit pull requests for review.
+- Please use feature branches for all new work. The recommended workflow is:
+  1. Pull the latest changes from the `development` branch:
+     ```sh
+     git checkout development
+     git pull origin development
+     ```
+  2. Create a new feature branch from `development`:
+     ```sh
+     git checkout -b feature/<short-description>
+     ```
+     Replace `<short-description>` with a concise name for your feature (e.g., `feature/kanji-list`).
+  3. Make your changes and commit them with clear messages.
+  4. Push your feature branch to the remote repository:
+     ```sh
+     git push origin feature/<short-description>
+     ```
+  5. Open a pull request (PR) to merge your feature branch into `development`.
+  6. After review and approval, your changes will be merged into `development`.
+- Do not commit directly to `main` or `development` unless you are performing a release or hotfix.
+- Keep your feature branches up to date by regularly pulling from `development` and resolving any conflicts locally.
 - Follow the existing code style and structure.
 - Add comments and documentation as needed.
 
