@@ -50,16 +50,19 @@ Before you begin, make sure you have the following software installed:
      - `services/` — API calls and backend services
      - `contexts/` — React Context providers
      - `styles/` — Global styles and theme config
-     - `App.jsx` — Root component
+   - `App.jsx` — Root component
 
 5. **Recommended VS Code Extensions**
    - ESLint
    - Prettier
    - Material Icon Theme
-   - GitLens
+   - Copilot
 
-6. **Environment Variables**
-   - If you need to add environment variables, create a `.env` file in the project root. See `.env.example` if available.
+6. **Using VS Code Source Control (Optional but Recommended)**
+   - VS Code has built-in Git source control integration.
+   - Click the Source Control icon in the Activity Bar on the side of VS Code (or press `Ctrl+Shift+G`).
+   - You can stage, commit, and push changes directly from the editor.
+   - For more info, see: https://code.visualstudio.com/docs/editor/versioncontrol
 
 ## Useful Commands
 - `npm run dev` — Start the development server
