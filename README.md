@@ -2,6 +2,20 @@
 
 Welcome to the Kakitori project! This is a modern React web application for Japanese language learning, built with Vite and Material UI. Please follow the instructions below to get your development environment set up from scratch.
 
+---
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Getting Started](#getting-started)
+3. [Project Structure](#project-structure)
+4. [Recommended VS Code Extensions](#recommended-vs-code-extensions)
+5. [Using VS Code Source Control](#using-vs-code-source-control-optional-but-recommended)
+6. [Useful Commands](#useful-commands)
+7. [Troubleshooting](#troubleshooting)
+8. [Contributing](#contributing)
+
+---
+
 ## Prerequisites
 
 Before you begin, make sure you have the following software installed:
@@ -17,6 +31,8 @@ Before you begin, make sure you have the following software installed:
 
 3. **A code editor (recommended: Visual Studio Code)**
    - Download from: https://code.visualstudio.com/
+
+---
 
 ## Getting Started
 
@@ -39,35 +55,45 @@ Before you begin, make sure you have the following software installed:
    ```
    The app will be available at the local address shown in your terminal (usually http://localhost:5173).
 
-4. **Project Structure**
-   - `src/` — Main source code
-     - `assets/` — Images, logos, icons
-     - `components/` — Reusable React components
-     - `pages/` — Main app pages (Dashboard, Kanji, Vocab, etc.)
-     - `features/` — Core feature modules
-     - `hooks/` — Custom React hooks
-     - `utils/` — Utility functions
-     - `services/` — API calls and backend services
-     - `contexts/` — React Context providers
-     - `styles/` — Global styles and theme config
-   - `App.jsx` — Root component
+---
 
-5. **Recommended VS Code Extensions**
-   - ESLint
-   - Prettier
-   - Material Icon Theme
-   - Copilot
+## Project Structure
+- `src/` — Main source code
+  - `assets/` — Images, logos, icons
+  - `components/` — Reusable React components
+  - `pages/` — Main app pages (Dashboard, Kanji, Vocab, etc.)
+  - `features/` — Core feature modules
+  - `hooks/` — Custom React hooks
+  - `utils/` — Utility functions
+  - `services/` — API calls and backend services
+  - `contexts/` — React Context providers
+  - `styles/` — Global styles and theme config
+- `App.jsx` — Root component
 
-6. **Using VS Code Source Control (Optional but Recommended)**
-   - VS Code has built-in Git source control integration.
-   - Click the Source Control icon in the Activity Bar on the side of VS Code (or press `Ctrl+Shift+G`).
-   - You can stage, commit, and push changes directly from the editor.
-   - For more info, see: https://code.visualstudio.com/docs/editor/versioncontrol
+---
+
+## Recommended VS Code Extensions
+- ESLint
+- Prettier
+- Material Icon Theme
+- Copilot
+
+---
+
+## Using VS Code Source Control (Optional but Recommended)
+- VS Code has built-in Git source control integration.
+- Click the Source Control icon in the Activity Bar on the side of VS Code (or press `Ctrl+Shift+G`).
+- You can stage, commit, and push changes directly from the editor.
+- For more info, see: https://code.visualstudio.com/docs/editor/versioncontrol
+
+---
 
 ## Useful Commands
 - `npm run dev` — Start the development server
 - `npm run build` — Build the app for production
 - `npm run preview` — Preview the production build locally
+
+---
 
 ## Troubleshooting
 - If you encounter issues with missing packages, run `npm install` again.
@@ -76,6 +102,8 @@ Before you begin, make sure you have the following software installed:
   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
   ```
 - If you have issues with ports, make sure nothing else is running on port 5173 or change the port in `vite.config.js`.
+
+---
 
 ## Contributing
 - Please use feature branches for all new work. The recommended workflow is:
