@@ -54,6 +54,8 @@ import {
 import KanjiSearchDrawer from '../features/kanji/KanjiSearchDrawer';
 import KanjiInformationPanel from '../features/kanji/KanjiInformationPanel';
 import JLPTGroupingView from '../features/kanji/JLPTGroupingView';
+import KanjiDetailModal from '../features/kanji/KanjiDetailModal';
+import KanjiCard from '../features/kanji/KanjiCard';
 
 // Enhanced sample kanji data
 const sampleKanji = [
@@ -247,6 +249,7 @@ export default function Kanji() {
   const [sortBy, setSortBy] = useState('stroke');
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -355,6 +358,12 @@ export default function Kanji() {
   const learnedCount = kanjiList.filter(k => k.isLearned).length;
   const totalCount = kanjiList.length;
   const progressPercentage = (learnedCount / totalCount) * 100;
+
+  // Open modal on kanji click
+  const handleKanjiClick = (kanji) => {
+    setSelectedKanji(kanji);
+    setModalOpen(true);
+  };
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -540,7 +549,7 @@ export default function Kanji() {
       {viewMode === VIEW_MODES.JLPT ? (
         <JLPTGroupingView 
           kanjiList={sortedKanji}
-          onKanjiSelect={setSelectedKanji}
+          onKanjiSelect={handleKanjiClick}
           onStartLevelPractice={handleStartLevelPractice}
         />
       ) : (
@@ -602,108 +611,12 @@ export default function Kanji() {
                 <Grid container spacing={2}>
                   {sortedKanji.map((kanji) => (
                     <Grid item xs={12} sm={6} md={4} lg={selectedKanji ? 4 : 3} key={kanji.id}>
-                      <Card 
-                        sx={{ 
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: '0 8px 25px rgba(0,0,0,0.12)'
-                          }
-                        }}
-                        onClick={() => setSelectedKanji(kanji)}
-                      >
-                        <CardContent sx={{ p: 2 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                            <Typography 
-                              variant="h2" 
-                              sx={{ 
-                                fontFamily: 'serif',
-                                color: '#333',
-                                fontWeight: 400,
-                                lineHeight: 1
-                              }}
-                            >
-                              {kanji.character}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <IconButton 
-                                size="small" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleFavorite(kanji.id);
-                                }}
-                              >
-                                {kanji.isFavorite ? 
-                                  <Star sx={{ color: '#ff9800', fontSize: 18 }} /> : 
-                                  <StarBorder sx={{ color: '#ccc', fontSize: 18 }} />
-                                }
-                              </IconButton>
-                              {kanji.isLearned && (
-                                <CheckCircle sx={{ color: '#4caf50', fontSize: 18 }} />
-                              )}
-                            </Box>
-                          </Box>
-                          
-                          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                            {kanji.meaning}
-                          </Typography>
-                          
-                          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                            <Chip 
-                              label={kanji.jlptLevel} 
-                              size="small" 
-                              sx={{ 
-                                bgcolor: jlptColors[kanji.jlptLevel],
-                                color: 'white',
-                                fontSize: '0.7rem'
-                              }} 
-                            />
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, mr: 2 }}>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Chip 
-                            label={kanji.jlptLevel} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: jlptColors[kanji.jlptLevel],
-                              color: 'white'
-                            }} 
-                          />
-                          <Chip 
-                            label={kanji.frequency} 
-                            size="small" 
-                            color="success"
-                            variant="outlined"
-                          />
-                        </Box>
-                        <Typography variant="caption" sx={{ color: '#999' }}>
-                          #{kanji.frequencyRank || 'N/A'} • {kanji.gradeLevel || 'Secondary'}
-                        </Typography>
-                      </Box>
-                            <Chip 
-                              label={`${kanji.strokes} strokes`} 
-                              size="small" 
-                              variant="outlined"
-                              sx={{ fontSize: '0.7rem' }}
-                            />
-                            <Chip 
-                              label={kanji.frequency} 
-                              size="small" 
-                              color="success"
-                              variant="outlined"
-                              sx={{ fontSize: '0.7rem' }}
-                            />
-                          </Box>
-                          
-                          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 0.5 }}>
-                            On: {kanji.readings.on}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
-                            Kun: {kanji.readings.kun}
-                          </Typography>
-                        </CardContent>
-                      </Card>
+                      <KanjiCard
+                        kanji={kanji}
+                        selected={selectedKanji?.id === kanji.id}
+                        onClick={() => handleKanjiClick(kanji)}
+                        onToggleFavorite={toggleFavorite}
+                      />
                     </Grid>
                   ))}
                 </Grid>
@@ -719,7 +632,7 @@ export default function Kanji() {
                         cursor: 'pointer',
                         '&:hover': { bgcolor: '#f8f9fa' }
                       }}
-                      onClick={() => setSelectedKanji(kanji)}
+                      onClick={() => handleKanjiClick(kanji)}
                     >
                       <ListItemAvatar>
                         <Avatar sx={{ 
@@ -775,9 +688,9 @@ export default function Kanji() {
             </Paper>
           </Grid>
 
-          {/* Right Panel - Kanji Details */}
+          {/* Right Panel - Kanji Details (desktop only) */}
           {selectedKanji && (
-            <Grid item xs={12} lg={4}>
+            <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', lg: 'block' } }}>
               <KanjiInformationPanel 
                 kanji={selectedKanji}
                 onToggleFavorite={toggleFavorite}
@@ -788,6 +701,13 @@ export default function Kanji() {
           )}
         </Grid>
       )}
+
+      {/* Kanji Detail Modal (mobile/tablet and hybrid) */}
+      <KanjiDetailModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        kanji={selectedKanji} 
+      />
 
       {/* Advanced Search Drawer */}
       <KanjiSearchDrawer 

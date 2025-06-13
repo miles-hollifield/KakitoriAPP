@@ -6,6 +6,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Kanji from './pages/Kanji';
+import KanjiDetail from './pages/KanjiDetail';
 import Vocab from './pages/Vocab';
 import Kana from './pages/Kana';
 import Lessons from './pages/Lessons';
@@ -91,6 +92,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/kanji" element={<Kanji />} />
+                <Route path="/kanji/:kanjiId" element={<KanjiDetail />} />
                 <Route path="/vocab" element={<Vocab />} />
                 <Route path="/kana" element={<Kana />} />
                 <Route path="/lessons" element={<Lessons />} />
