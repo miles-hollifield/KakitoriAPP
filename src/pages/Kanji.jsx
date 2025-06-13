@@ -51,9 +51,9 @@ import {
 } from '@mui/icons-material';
 
 // Import our new components
-import KanjiSearchDrawer from '../components/KanjiSearchDrawer';
-import KanjiInformationPanel from '../components/KanjiInformationPanel';
-import JLPTGroupingView from '../components/JLPTGroupingView';
+import KanjiSearchDrawer from '../features/kanji/KanjiSearchDrawer';
+import KanjiInformationPanel from '../features/kanji/KanjiInformationPanel';
+import JLPTGroupingView from '../features/kanji/JLPTGroupingView';
 
 // Enhanced sample kanji data
 const sampleKanji = [
