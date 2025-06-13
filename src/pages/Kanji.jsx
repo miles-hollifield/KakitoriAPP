@@ -258,6 +258,8 @@ export default function Kanji() {
   const handleViewModeChange = (event, newMode) => {
     if (newMode !== null) {
       setViewMode(newMode);
+      // Clear selected kanji when switching views to prevent layout shifts
+      setSelectedKanji(null);
     }
   };
 
@@ -363,6 +365,18 @@ export default function Kanji() {
   const handleKanjiClick = (kanji) => {
     setSelectedKanji(kanji);
     setModalOpen(true);
+  };
+
+  // Calculate consistent grid columns for different screen sizes
+  const getGridColumns = () => {
+    // Fixed columns for consistent width regardless of view mode
+    return {
+      xs: 12,
+      sm: 6,
+      md: 4,
+      lg: 3,
+      xl: 2.4 // 5 columns on extra large screens
+    };
   };
 
   return (
@@ -545,18 +559,26 @@ export default function Kanji() {
         </Button>
       </Box>
 
-      {/* Main Content Area */}
-      {viewMode === VIEW_MODES.JLPT ? (
-        <JLPTGroupingView 
-          kanjiList={sortedKanji}
-          onKanjiSelect={handleKanjiClick}
-          onStartLevelPractice={handleStartLevelPractice}
-        />
-      ) : (
-        <Grid container spacing={3}>
-          {/* Left Panel - Kanji List */}
-          <Grid item xs={12} lg={selectedKanji ? 8 : 12}>
-            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+      {/* Main Content Area with Responsive Consistent Width */}
+      <Box sx={{ 
+        width: '100%', 
+        display: 'flex', 
+        justifyContent: 'center',
+        px: { xs: 1, sm: 2, md: 3 }
+      }}>
+        <Box sx={{ 
+          width: '100%',
+          maxWidth: { xs: '100%', sm: '100%', md: '900px', lg: '1100px', xl: '1300px' },
+          minWidth: { xs: 'auto', sm: 'auto', md: '800px' }
+        }}>
+          {viewMode === VIEW_MODES.JLPT ? (
+            <JLPTGroupingView 
+              kanjiList={sortedKanji}
+              onKanjiSelect={handleKanjiClick}
+              onStartLevelPractice={handleStartLevelPractice}
+            />
+          ) : (
+            <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
               {/* Search and Filter */}
               <Box sx={{ mb: 3 }}>
                 <TextField
@@ -574,7 +596,13 @@ export default function Kanji() {
                   sx={{ mb: 2 }}
                 />
                 
-                <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 2 }}>
+                <Tabs 
+                  value={selectedTab} 
+                  onChange={handleTabChange} 
+                  sx={{ mb: 2 }}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
                   <Tab label={`All (${kanjiList.length})`} />
                   <Tab 
                     label={
@@ -606,101 +634,138 @@ export default function Kanji() {
                 {Object.keys(searchFilters).length > 0 && ' with filters applied'}
               </Typography>
 
-              {/* Kanji Display */}
-              {viewMode === VIEW_MODES.GRID ? (
-                <Grid container spacing={2}>
-                  {sortedKanji.map((kanji) => (
-                    <Grid item xs={12} sm={6} md={4} lg={selectedKanji ? 4 : 3} key={kanji.id}>
-                      <KanjiCard
-                        kanji={kanji}
-                        selected={selectedKanji?.id === kanji.id}
-                        onClick={() => handleKanjiClick(kanji)}
-                        onToggleFavorite={toggleFavorite}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <List sx={{ p: 0 }}>
-                  {sortedKanji.map((kanji) => (
-                    <ListItem 
-                      key={kanji.id}
-                      sx={{ 
-                        mb: 1,
-                        border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
-                        borderRadius: 2,
-                        cursor: 'pointer',
-                        '&:hover': { bgcolor: '#f8f9fa' }
-                      }}
-                      onClick={() => handleKanjiClick(kanji)}
-                    >
-                      <ListItemAvatar>
-                        <Avatar sx={{ 
-                          bgcolor: 'transparent', 
-                          color: '#333',
-                          fontSize: '2rem',
-                          fontFamily: 'serif',
-                          width: 60,
-                          height: 60
-                        }}>
-                          {kanji.character}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText 
-                        primary={kanji.meaning}
-                        secondary={`On: ${kanji.readings.on} • Kun: ${kanji.readings.kun} • ${kanji.strokes} strokes • ${kanji.jlptLevel}`}
-                        primaryTypographyProps={{
-                          fontWeight: 600,
-                          fontSize: '1.1rem'
-                        }}
-                        secondaryTypographyProps={{
-                          fontSize: '0.9rem'
-                        }}
-                      />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {kanji.isFavorite && <Star sx={{ color: '#ff9800', fontSize: 20 }} />}
-                        {kanji.isLearned && <CheckCircle sx={{ color: '#4caf50', fontSize: 20 }} />}
-                        <IconButton 
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(kanji.id);
+              {/* Kanji Display - Responsive Container with Consistent Behavior */}
+              <Box sx={{ 
+                width: '100%',
+                minHeight: '400px', // Prevent height jumping
+                position: 'relative'
+              }}>
+                {viewMode === VIEW_MODES.GRID ? (
+                  <Grid container spacing={2} sx={{ width: '100%' }}>
+                    {sortedKanji.map((kanji) => (
+                      <Grid item {...getGridColumns()} key={kanji.id}>
+                        <KanjiCard
+                          kanji={kanji}
+                          selected={selectedKanji?.id === kanji.id}
+                          onClick={() => handleKanjiClick(kanji)}
+                          onToggleFavorite={toggleFavorite}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Box sx={{ 
+                    width: '100%',
+                    // Constrain list width to match grid container behavior
+                    maxWidth: { 
+                      xs: '100%', 
+                      sm: '100%', 
+                      md: 'calc(100% - 40px)', // Account for potential scrollbar
+                      lg: 'calc(100% - 40px)',
+                      xl: 'calc(100% - 40px)'
+                    }
+                  }}>
+                    <List sx={{ p: 0, width: '100%' }}>
+                      {sortedKanji.map((kanji) => (
+                        <ListItem 
+                          key={kanji.id}
+                          sx={{ 
+                            mb: 1,
+                            border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            width: '100%',
+                            minHeight: '80px', // Consistent height
+                            display: 'flex',
+                            alignItems: 'center',
+                            '&:hover': { bgcolor: '#f8f9fa' }
                           }}
+                          onClick={() => handleKanjiClick(kanji)}
                         >
-                          <BookmarkBorder fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
+                          <ListItemAvatar sx={{ minWidth: 'auto', mr: 2 }}>
+                            <Avatar sx={{ 
+                              bgcolor: 'transparent', 
+                              color: '#333',
+                              fontSize: { xs: '1.5rem', sm: '2rem' },
+                              fontFamily: 'serif',
+                              width: { xs: 50, sm: 60 },
+                              height: { xs: 50, sm: 60 }
+                            }}>
+                              {kanji.character}
+                            </Avatar>
+                          </ListItemAvatar>
+                          <ListItemText 
+                            primary={kanji.meaning}
+                            secondary={`On: ${kanji.readings.on} • Kun: ${kanji.readings.kun} • ${kanji.strokes} strokes • ${kanji.jlptLevel}`}
+                            primaryTypographyProps={{
+                              fontWeight: 600,
+                              fontSize: { xs: '1rem', sm: '1.1rem' }
+                            }}
+                            secondaryTypographyProps={{
+                              fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                            }}
+                            sx={{ flex: 1, mr: 2 }}
+                          />
+                          <Box sx={{ 
+                            display: 'flex', 
+                            flexDirection: { xs: 'column', sm: 'column' }, 
+                            alignItems: 'flex-end', 
+                            gap: 1,
+                            minWidth: { xs: '100px', sm: '120px' }
+                          }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              <Chip 
+                                label={kanji.jlptLevel} 
+                                size="small" 
+                                sx={{ 
+                                  bgcolor: jlptColors[kanji.jlptLevel],
+                                  color: 'white',
+                                  fontSize: { xs: '0.7rem', sm: '0.75rem' }
+                                }} 
+                              />
+                              <Chip 
+                                label={kanji.frequency} 
+                                size="small" 
+                                color="success"
+                                variant="outlined"
+                                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                              />
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {kanji.isFavorite && <Star sx={{ color: '#ff9800', fontSize: { xs: 18, sm: 20 } }} />}
+                              {kanji.isLearned && <CheckCircle sx={{ color: '#4caf50', fontSize: { xs: 18, sm: 20 } }} />}
+                              <IconButton 
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(kanji.id);
+                                }}
+                              >
+                                <BookmarkBorder fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
 
-              {sortedKanji.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
-                    No kanji found
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#999' }}>
-                    Try adjusting your search terms or filters
-                  </Typography>
-                </Box>
-              )}
+                {sortedKanji.length === 0 && (
+                  <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
+                      No kanji found
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#999' }}>
+                      Try adjusting your search terms or filters
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Paper>
-          </Grid>
-
-          {/* Right Panel - Kanji Details (desktop only) */}
-          {selectedKanji && (
-            <Grid item xs={12} lg={4} sx={{ display: { xs: 'none', lg: 'block' } }}>
-              <KanjiInformationPanel 
-                kanji={selectedKanji}
-                onToggleFavorite={toggleFavorite}
-                onMarkAsLearned={markAsLearned}
-                onPractice={handlePractice}
-              />
-            </Grid>
           )}
-        </Grid>
-      )}
+        </Box>
+      </Box>
 
       {/* Kanji Detail Modal (mobile/tablet and hybrid) */}
       <KanjiDetailModal 
