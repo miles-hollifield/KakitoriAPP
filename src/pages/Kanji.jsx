@@ -21,7 +21,10 @@ import {
   ListItemAvatar,
   Divider,
   Stack,
-  Badge
+  Badge,
+  ToggleButton,
+  ToggleButtonGroup,
+  Fab
 } from '@mui/material';
 import { 
   Search,
@@ -39,10 +42,20 @@ import {
   Timeline,
   Visibility,
   Edit,
-  CheckCircle
+  CheckCircle,
+  ViewList,
+  ViewComfy,
+  GridView,
+  Sort,
+  Tune
 } from '@mui/icons-material';
 
-// Sample kanji data - in a real app, this would come from an API
+// Import our new components
+import KanjiSearchDrawer from '../components/KanjiSearchDrawer';
+import KanjiInformationPanel from '../components/KanjiInformationPanel';
+import JLPTGroupingView from '../components/JLPTGroupingView';
+
+// Enhanced sample kanji data
 const sampleKanji = [
   {
     id: 1,
@@ -51,11 +64,24 @@ const sampleKanji = [
     meaning: 'water',
     strokes: 4,
     jlptLevel: 'N5',
-    frequency: 'high',
+    gradeLevel: 'Grade 1',
+    frequency: 'Very High',
+    frequencyRank: 365,
     examples: ['水道 (すいどう)', '水曜日 (すいようび)', '水着 (みずぎ)'],
+    exampleMeanings: ['water supply', 'Wednesday', 'swimsuit'],
     isLearned: true,
     isFavorite: false,
-    difficultyLevel: 'beginner'
+    difficultyLevel: 'beginner',
+    practiceCount: 15,
+    radical: '水',
+    kunCompounds: [
+      { word: '水', reading: 'みず', meaning: 'water' },
+      { word: '水着', reading: 'みずぎ', meaning: 'swimsuit' }
+    ],
+    onCompounds: [
+      { word: '水道', reading: 'すいどう', meaning: 'water supply' },
+      { word: '水曜日', reading: 'すいようび', meaning: 'Wednesday' }
+    ]
   },
   {
     id: 2,
@@ -64,11 +90,16 @@ const sampleKanji = [
     meaning: 'fire',
     strokes: 4,
     jlptLevel: 'N5',
-    frequency: 'high',
+    gradeLevel: 'Grade 1',
+    frequency: 'High',
+    frequencyRank: 412,
     examples: ['火曜日 (かようび)', '火事 (かじ)', '花火 (はなび)'],
+    exampleMeanings: ['Tuesday', 'fire incident', 'fireworks'],
     isLearned: true,
     isFavorite: true,
-    difficultyLevel: 'beginner'
+    difficultyLevel: 'beginner',
+    practiceCount: 12,
+    radical: '火'
   },
   {
     id: 3,
@@ -77,11 +108,16 @@ const sampleKanji = [
     meaning: 'tree, wood',
     strokes: 4,
     jlptLevel: 'N5',
-    frequency: 'high',
+    gradeLevel: 'Grade 1',
+    frequency: 'High',
+    frequencyRank: 298,
     examples: ['木曜日 (もくようび)', '木材 (もくざい)', '大木 (たいぼく)'],
+    exampleMeanings: ['Thursday', 'lumber', 'large tree'],
     isLearned: false,
     isFavorite: false,
-    difficultyLevel: 'beginner'
+    difficultyLevel: 'beginner',
+    practiceCount: 3,
+    radical: '木'
   },
   {
     id: 4,
@@ -90,11 +126,16 @@ const sampleKanji = [
     meaning: 'gold, money',
     strokes: 8,
     jlptLevel: 'N5',
-    frequency: 'high',
+    gradeLevel: 'Grade 1',
+    frequency: 'High',
+    frequencyRank: 156,
     examples: ['金曜日 (きんようび)', '金額 (きんがく)', '現金 (げんきん)'],
+    exampleMeanings: ['Friday', 'amount of money', 'cash'],
     isLearned: false,
     isFavorite: true,
-    difficultyLevel: 'beginner'
+    difficultyLevel: 'beginner',
+    practiceCount: 0,
+    radical: '金'
   },
   {
     id: 5,
@@ -103,11 +144,16 @@ const sampleKanji = [
     meaning: 'study, learn',
     strokes: 8,
     jlptLevel: 'N5',
-    frequency: 'high',
+    gradeLevel: 'Grade 1',
+    frequency: 'Very High',
+    frequencyRank: 89,
     examples: ['学校 (がっこう)', '学生 (がくせい)', '数学 (すうがく)'],
+    exampleMeanings: ['school', 'student', 'mathematics'],
     isLearned: false,
     isFavorite: false,
-    difficultyLevel: 'beginner'
+    difficultyLevel: 'beginner',
+    practiceCount: 7,
+    radical: '子'
   },
   {
     id: 6,
@@ -115,12 +161,53 @@ const sampleKanji = [
     readings: { on: 'カ・ケ', kun: 'いえ・うち' },
     meaning: 'house, home',
     strokes: 10,
-    jlptLevel: 'N5',
-    frequency: 'high',
+    jlptLevel: 'N4',
+    gradeLevel: 'Grade 2',
+    frequency: 'High',
+    frequencyRank: 234,
     examples: ['家族 (かぞく)', '家庭 (かてい)', '実家 (じっか)'],
+    exampleMeanings: ['family', 'home/household', 'parents home'],
     isLearned: false,
     isFavorite: false,
-    difficultyLevel: 'intermediate'
+    difficultyLevel: 'intermediate',
+    practiceCount: 2,
+    radical: '宀'
+  },
+  {
+    id: 7,
+    character: '時',
+    readings: { on: 'ジ', kun: 'とき・じ' },
+    meaning: 'time, hour',
+    strokes: 10,
+    jlptLevel: 'N4',
+    gradeLevel: 'Grade 2',
+    frequency: 'Very High',
+    frequencyRank: 67,
+    examples: ['時間 (じかん)', '時計 (とけい)', '何時 (なんじ)'],
+    exampleMeanings: ['time', 'clock/watch', 'what time'],
+    isLearned: false,
+    isFavorite: false,
+    difficultyLevel: 'intermediate',
+    practiceCount: 0,
+    radical: '日'
+  },
+  {
+    id: 8,
+    character: '言',
+    readings: { on: 'ゲン・ゴン', kun: 'い(う)・こと' },
+    meaning: 'say, word',
+    strokes: 7,
+    jlptLevel: 'N3',
+    gradeLevel: 'Grade 2',
+    frequency: 'High',
+    frequencyRank: 178,
+    examples: ['言葉 (ことば)', '発言 (はつげん)', '言語 (げんご)'],
+    exampleMeanings: ['word/language', 'statement', 'language'],
+    isLearned: false,
+    isFavorite: false,
+    difficultyLevel: 'intermediate',
+    practiceCount: 0,
+    radical: '言'
   }
 ];
 
@@ -138,15 +225,37 @@ const jlptColors = {
   N1: '#f44336'
 };
 
-// Kanji page for Kakitori
+const VIEW_MODES = {
+  LIST: 'list',
+  GRID: 'grid',
+  JLPT: 'jlpt'
+};
+
+const SORT_OPTIONS = [
+  { value: 'stroke', label: 'Stroke Count' },
+  { value: 'frequency', label: 'Frequency' },
+  { value: 'jlpt', label: 'JLPT Level' },
+  { value: 'alphabetical', label: 'Alphabetical' }
+];
+
 export default function Kanji() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [kanjiList, setKanjiList] = useState(sampleKanji);
+  const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
+  const [sortBy, setSortBy] = useState('stroke');
+  const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({});
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
+  };
+
+  const handleViewModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setViewMode(newMode);
+    }
   };
 
   const toggleFavorite = (kanjiId) => {
@@ -165,18 +274,81 @@ export default function Kanji() {
     ));
   };
 
+  const handlePractice = (kanji) => {
+    console.log('Starting practice for:', kanji.character);
+    // Practice functionality would be implemented here
+  };
+
+  const handleStartLevelPractice = (level) => {
+    console.log('Starting practice for level:', level);
+    // Level practice functionality would be implemented here
+  };
+
+  const handleAdvancedSearch = (filters) => {
+    setSearchFilters(filters);
+  };
+
+  const applyFiltersAndSearch = (kanji) => {
+    // Basic search
+    const matchesBasicSearch = searchTerm === '' || 
+      kanji.character.includes(searchTerm) || 
+      kanji.meaning.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      kanji.readings.on.includes(searchTerm) ||
+      kanji.readings.kun.includes(searchTerm);
+
+    // Advanced filters
+    const matchesCharacterFilter = !searchFilters.character || 
+      kanji.character.includes(searchFilters.character);
+    
+    const matchesMeaningFilter = !searchFilters.meaning || 
+      kanji.meaning.toLowerCase().includes(searchFilters.meaning.toLowerCase());
+    
+    const matchesReadingFilter = !searchFilters.reading || 
+      kanji.readings.on.includes(searchFilters.reading) ||
+      kanji.readings.kun.includes(searchFilters.reading);
+    
+    const matchesJLPTFilter = !searchFilters.jlptLevels?.length || 
+      searchFilters.jlptLevels.includes(kanji.jlptLevel);
+    
+    const matchesGradeFilter = !searchFilters.gradeLevels?.length || 
+      searchFilters.gradeLevels.includes(kanji.gradeLevel);
+    
+    const matchesStrokeFilter = !searchFilters.strokeRange || 
+      (kanji.strokes >= searchFilters.strokeRange[0] && kanji.strokes <= searchFilters.strokeRange[1]);
+    
+    const matchesFrequencyFilter = !searchFilters.frequency?.length || 
+      searchFilters.frequency.includes(kanji.frequency);
+
+    return matchesBasicSearch && matchesCharacterFilter && matchesMeaningFilter && 
+           matchesReadingFilter && matchesJLPTFilter && matchesGradeFilter && 
+           matchesStrokeFilter && matchesFrequencyFilter;
+  };
+
   const filteredKanji = kanjiList.filter(kanji => {
-    const matchesSearch = kanji.character.includes(searchTerm) || 
-                         kanji.meaning.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         kanji.readings.on.includes(searchTerm) ||
-                         kanji.readings.kun.includes(searchTerm);
+    const matchesFilters = applyFiltersAndSearch(kanji);
     
     switch (selectedTab) {
-      case 0: return matchesSearch; // All
-      case 1: return matchesSearch && !kanji.isLearned; // To Learn
-      case 2: return matchesSearch && kanji.isLearned; // Learned
-      case 3: return matchesSearch && kanji.isFavorite; // Favorites
-      default: return matchesSearch;
+      case 0: return matchesFilters; // All
+      case 1: return matchesFilters && !kanji.isLearned; // To Learn
+      case 2: return matchesFilters && kanji.isLearned; // Learned
+      case 3: return matchesFilters && kanji.isFavorite; // Favorites
+      default: return matchesFilters;
+    }
+  });
+
+  const sortedKanji = [...filteredKanji].sort((a, b) => {
+    switch (sortBy) {
+      case 'stroke':
+        return a.strokes - b.strokes;
+      case 'frequency':
+        return (a.frequencyRank || 9999) - (b.frequencyRank || 9999);
+      case 'jlpt':
+        const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
+        return jlptOrder[a.jlptLevel] - jlptOrder[b.jlptLevel];
+      case 'alphabetical':
+        return a.character.localeCompare(b.character);
+      default:
+        return 0;
     }
   });
 
@@ -192,7 +364,7 @@ export default function Kanji() {
           Kanji Learning Hub
         </Typography>
         <Typography variant="body1" sx={{ color: '#666', mb: 3 }}>
-          Master Japanese kanji with interactive lessons and practice
+          Master Japanese kanji with interactive lessons and comprehensive practice tools
         </Typography>
 
         {/* Progress Overview */}
@@ -222,7 +394,7 @@ export default function Kanji() {
                 </Typography>
               </Box>
               <Typography variant="body2" sx={{ color: '#666' }}>
-                {learnedCount} of {totalCount} kanji learned
+                {learnedCount} of {totalCount} kanji learned • {filteredKanji.length} shown with current filters
               </Typography>
             </Grid>
             <Grid item xs={12} md={4}>
@@ -312,304 +484,334 @@ export default function Kanji() {
         </Grid>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* Left Panel - Kanji List */}
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-            {/* Search and Filter */}
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                placeholder="Search kanji by character, meaning, or reading..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: '#666' }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 2 }}
-              />
-              
-              <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 2 }}>
-                <Tab label={`All (${kanjiList.length})`} />
-                <Tab 
-                  label={
-                    <Badge badgeContent={kanjiList.filter(k => !k.isLearned).length} color="warning">
-                      To Learn
-                    </Badge>
-                  } 
-                />
-                <Tab 
-                  label={
-                    <Badge badgeContent={learnedCount} color="success">
-                      Learned
-                    </Badge>
-                  } 
-                />
-                <Tab 
-                  label={
-                    <Badge badgeContent={kanjiList.filter(k => k.isFavorite).length} color="error">
-                      Favorites
-                    </Badge>
-                  } 
-                />
-              </Tabs>
-            </Box>
+      {/* View Mode Toggle and Controls */}
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={handleViewModeChange}
+            size="small"
+          >
+            <ToggleButton value={VIEW_MODES.GRID}>
+              <GridView fontSize="small" />
+            </ToggleButton>
+            <ToggleButton value={VIEW_MODES.LIST}>
+              <ViewList fontSize="small" />
+            </ToggleButton>
+            <ToggleButton value={VIEW_MODES.JLPT}>
+              <School fontSize="small" />
+            </ToggleButton>
+          </ToggleButtonGroup>
 
-            {/* Kanji Grid */}
-            <Grid container spacing={2}>
-              {filteredKanji.map((kanji) => (
-                <Grid item xs={12} sm={6} md={4} key={kanji.id}>
-                  <Card 
-                    sx={{ 
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 25px rgba(0,0,0,0.12)'
-                      }
-                    }}
-                    onClick={() => setSelectedKanji(kanji)}
-                  >
-                    <CardContent sx={{ p: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                        <Typography 
-                          variant="h2" 
-                          sx={{ 
-                            fontFamily: 'serif',
-                            color: '#333',
-                            fontWeight: 400,
-                            lineHeight: 1
+          {viewMode !== VIEW_MODES.JLPT && (
+            <TextField
+              select
+              size="small"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              SelectProps={{ native: true }}
+              sx={{ minWidth: 120 }}
+            >
+              {SORT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </TextField>
+          )}
+        </Box>
+
+        <Button
+          variant="outlined"
+          startIcon={<Tune />}
+          onClick={() => setSearchDrawerOpen(true)}
+          sx={{ 
+            borderColor: '#b8862b',
+            color: '#b8862b',
+            '&:hover': { borderColor: '#a0752a', bgcolor: 'rgba(184, 134, 43, 0.04)' }
+          }}
+        >
+          Advanced Search
+        </Button>
+      </Box>
+
+      {/* Main Content Area */}
+      {viewMode === VIEW_MODES.JLPT ? (
+        <JLPTGroupingView 
+          kanjiList={sortedKanji}
+          onKanjiSelect={setSelectedKanji}
+          onStartLevelPractice={handleStartLevelPractice}
+        />
+      ) : (
+        <Grid container spacing={3}>
+          {/* Left Panel - Kanji List */}
+          <Grid item xs={12} lg={selectedKanji ? 8 : 12}>
+            <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              {/* Search and Filter */}
+              <Box sx={{ mb: 3 }}>
+                <TextField
+                  fullWidth
+                  placeholder="Search kanji by character, meaning, or reading..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: '#666' }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: 2 }}
+                />
+                
+                <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 2 }}>
+                  <Tab label={`All (${kanjiList.length})`} />
+                  <Tab 
+                    label={
+                      <Badge badgeContent={kanjiList.filter(k => !k.isLearned).length} color="warning">
+                        To Learn
+                      </Badge>
+                    } 
+                  />
+                  <Tab 
+                    label={
+                      <Badge badgeContent={learnedCount} color="success">
+                        Learned
+                      </Badge>
+                    } 
+                  />
+                  <Tab 
+                    label={
+                      <Badge badgeContent={kanjiList.filter(k => k.isFavorite).length} color="error">
+                        Favorites
+                      </Badge>
+                    } 
+                  />
+                </Tabs>
+              </Box>
+
+              {/* Results Count */}
+              <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                Showing {sortedKanji.length} kanji
+                {Object.keys(searchFilters).length > 0 && ' with filters applied'}
+              </Typography>
+
+              {/* Kanji Display */}
+              {viewMode === VIEW_MODES.GRID ? (
+                <Grid container spacing={2}>
+                  {sortedKanji.map((kanji) => (
+                    <Grid item xs={12} sm={6} md={4} lg={selectedKanji ? 4 : 3} key={kanji.id}>
+                      <Card 
+                        sx={{ 
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 8px 25px rgba(0,0,0,0.12)'
+                          }
+                        }}
+                        onClick={() => setSelectedKanji(kanji)}
+                      >
+                        <CardContent sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                            <Typography 
+                              variant="h2" 
+                              sx={{ 
+                                fontFamily: 'serif',
+                                color: '#333',
+                                fontWeight: 400,
+                                lineHeight: 1
+                              }}
+                            >
+                              {kanji.character}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <IconButton 
+                                size="small" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(kanji.id);
+                                }}
+                              >
+                                {kanji.isFavorite ? 
+                                  <Star sx={{ color: '#ff9800', fontSize: 18 }} /> : 
+                                  <StarBorder sx={{ color: '#ccc', fontSize: 18 }} />
+                                }
+                              </IconButton>
+                              {kanji.isLearned && (
+                                <CheckCircle sx={{ color: '#4caf50', fontSize: 18 }} />
+                              )}
+                            </Box>
+                          </Box>
+                          
+                          <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                            {kanji.meaning}
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                            <Chip 
+                              label={kanji.jlptLevel} 
+                              size="small" 
+                              sx={{ 
+                                bgcolor: jlptColors[kanji.jlptLevel],
+                                color: 'white',
+                                fontSize: '0.7rem'
+                              }} 
+                            />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, mr: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Chip 
+                            label={kanji.jlptLevel} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: jlptColors[kanji.jlptLevel],
+                              color: 'white'
+                            }} 
+                          />
+                          <Chip 
+                            label={kanji.frequency} 
+                            size="small" 
+                            color="success"
+                            variant="outlined"
+                          />
+                        </Box>
+                        <Typography variant="caption" sx={{ color: '#999' }}>
+                          #{kanji.frequencyRank || 'N/A'} • {kanji.gradeLevel || 'Secondary'}
+                        </Typography>
+                      </Box>
+                            <Chip 
+                              label={`${kanji.strokes} strokes`} 
+                              size="small" 
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem' }}
+                            />
+                            <Chip 
+                              label={kanji.frequency} 
+                              size="small" 
+                              color="success"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem' }}
+                            />
+                          </Box>
+                          
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 0.5 }}>
+                            On: {kanji.readings.on}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
+                            Kun: {kanji.readings.kun}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <List sx={{ p: 0 }}>
+                  {sortedKanji.map((kanji) => (
+                    <ListItem 
+                      key={kanji.id}
+                      sx={{ 
+                        mb: 1,
+                        border: selectedKanji?.id === kanji.id ? '2px solid #b8862b' : '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: '#f8f9fa' }
+                      }}
+                      onClick={() => setSelectedKanji(kanji)}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ 
+                          bgcolor: 'transparent', 
+                          color: '#333',
+                          fontSize: '2rem',
+                          fontFamily: 'serif',
+                          width: 60,
+                          height: 60
+                        }}>
+                          {kanji.character}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText 
+                        primary={kanji.meaning}
+                        secondary={`On: ${kanji.readings.on} • Kun: ${kanji.readings.kun} • ${kanji.strokes} strokes • ${kanji.jlptLevel}`}
+                        primaryTypographyProps={{
+                          fontWeight: 600,
+                          fontSize: '1.1rem'
+                        }}
+                        secondaryTypographyProps={{
+                          fontSize: '0.9rem'
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {kanji.isFavorite && <Star sx={{ color: '#ff9800', fontSize: 20 }} />}
+                        {kanji.isLearned && <CheckCircle sx={{ color: '#4caf50', fontSize: 20 }} />}
+                        <IconButton 
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(kanji.id);
                           }}
                         >
-                          {kanji.character}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(kanji.id);
-                            }}
-                          >
-                            {kanji.isFavorite ? 
-                              <Star sx={{ color: '#ff9800', fontSize: 18 }} /> : 
-                              <StarBorder sx={{ color: '#ccc', fontSize: 18 }} />
-                            }
-                          </IconButton>
-                          {kanji.isLearned && (
-                            <CheckCircle sx={{ color: '#4caf50', fontSize: 18 }} />
-                          )}
-                        </Box>
-                      </Box>
-                      
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                        {kanji.meaning}
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                        <Chip 
-                          label={kanji.jlptLevel} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: jlptColors[kanji.jlptLevel],
-                            color: 'white',
-                            fontSize: '0.7rem'
-                          }} 
-                        />
-                        <Chip 
-                          label={`${kanji.strokes} strokes`} 
-                          size="small" 
-                          variant="outlined"
-                          sx={{ fontSize: '0.7rem' }}
-                        />
-                      </Box>
-                      
-                      <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 0.5 }}>
-                        On: {kanji.readings.on}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#666', display: 'block' }}>
-                        Kun: {kanji.readings.kun}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Right Panel - Kanji Details */}
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', position: 'sticky', top: 20 }}>
-            {selectedKanji ? (
-              <>
-                <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <Typography 
-                    variant="h1" 
-                    sx={{ 
-                      fontFamily: 'serif',
-                      color: '#333',
-                      fontWeight: 400,
-                      mb: 2
-                    }}
-                  >
-                    {selectedKanji.character}
-                  </Typography>
-                  
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: '#b8862b' }}>
-                    {selectedKanji.meaning}
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mb: 2 }}>
-                    <Chip 
-                      label={selectedKanji.jlptLevel} 
-                      sx={{ 
-                        bgcolor: jlptColors[selectedKanji.jlptLevel],
-                        color: 'white'
-                      }} 
-                    />
-                    <Chip 
-                      label={`${selectedKanji.strokes} strokes`} 
-                      variant="outlined"
-                    />
-                    <Chip 
-                      label={selectedKanji.difficultyLevel} 
-                      sx={{ 
-                        bgcolor: difficultyColors[selectedKanji.difficultyLevel],
-                        color: 'white'
-                      }} 
-                    />
-                  </Box>
-                </Box>
-
-                <Divider sx={{ mb: 3 }} />
-
-                {/* Readings */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                    Readings
-                  </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ color: '#666', mb: 0.5 }}>
-                      On-yomi (音読み)
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: '#b8862b' }}>
-                      {selectedKanji.readings.on}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" sx={{ color: '#666', mb: 0.5 }}>
-                      Kun-yomi (訓読み)
-                    </Typography>
-                    <Typography variant="h6" sx={{ color: '#b8862b' }}>
-                      {selectedKanji.readings.kun}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Divider sx={{ mb: 3 }} />
-
-                {/* Examples */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                    Common Words
-                  </Typography>
-                  <List sx={{ p: 0 }}>
-                    {selectedKanji.examples.map((example, index) => (
-                      <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
-                        <ListItemText 
-                          primary={example}
-                          primaryTypographyProps={{
-                            fontFamily: 'serif',
-                            fontSize: '1rem'
-                          }}
-                        />
-                        <IconButton size="small">
-                          <VolumeUp fontSize="small" />
+                          <BookmarkBorder fontSize="small" />
                         </IconButton>
-                      </ListItem>
-                    ))}
-                  </List>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+
+              {sortedKanji.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
+                    No kanji found
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#999' }}>
+                    Try adjusting your search terms or filters
+                  </Typography>
                 </Box>
+              )}
+            </Paper>
+          </Grid>
 
-                <Divider sx={{ mb: 3 }} />
-
-                {/* Action Buttons */}
-                <Stack spacing={2}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    startIcon={<PlayArrow />}
-                    sx={{ 
-                      bgcolor: '#b8862b',
-                      '&:hover': { bgcolor: '#a0752a' }
-                    }}
-                  >
-                    Practice This Kanji
-                  </Button>
-                  
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<Edit />}
-                    sx={{ 
-                      borderColor: '#2196f3',
-                      color: '#2196f3',
-                      '&:hover': { borderColor: '#1976d2', bgcolor: 'rgba(33, 150, 243, 0.04)' }
-                    }}
-                  >
-                    Stroke Order
-                  </Button>
-                  
-                  {!selectedKanji.isLearned && (
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      startIcon={<CheckCircle />}
-                      onClick={() => markAsLearned(selectedKanji.id)}
-                      sx={{ 
-                        borderColor: '#4caf50',
-                        color: '#4caf50',
-                        '&:hover': { borderColor: '#45a049', bgcolor: 'rgba(76, 175, 80, 0.04)' }
-                      }}
-                    >
-                      Mark as Learned
-                    </Button>
-                  )}
-                  
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={selectedKanji.isFavorite ? <Bookmark /> : <BookmarkBorder />}
-                    onClick={() => toggleFavorite(selectedKanji.id)}
-                    sx={{ 
-                      borderColor: '#ff9800',
-                      color: '#ff9800',
-                      '&:hover': { borderColor: '#f57c00', bgcolor: 'rgba(255, 152, 0, 0.04)' }
-                    }}
-                  >
-                    {selectedKanji.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-                  </Button>
-                </Stack>
-              </>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
-                  Select a kanji to view details
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#999' }}>
-                  Click on any kanji card to see readings, meanings, and example words
-                </Typography>
-              </Box>
-            )}
-          </Paper>
+          {/* Right Panel - Kanji Details */}
+          {selectedKanji && (
+            <Grid item xs={12} lg={4}>
+              <KanjiInformationPanel 
+                kanji={selectedKanji}
+                onToggleFavorite={toggleFavorite}
+                onMarkAsLearned={markAsLearned}
+                onPractice={handlePractice}
+              />
+            </Grid>
+          )}
         </Grid>
-      </Grid>
+      )}
+
+      {/* Advanced Search Drawer */}
+      <KanjiSearchDrawer 
+        open={searchDrawerOpen}
+        onClose={() => setSearchDrawerOpen(false)}
+        onSearch={handleAdvancedSearch}
+        currentFilters={searchFilters}
+      />
+
+      {/* Floating Action Button for Mobile */}
+      <Fab 
+        color="primary" 
+        sx={{ 
+          position: 'fixed', 
+          bottom: 16, 
+          right: 16,
+          bgcolor: '#b8862b',
+          '&:hover': { bgcolor: '#a0752a' },
+          display: { xs: 'flex', md: 'none' }
+        }}
+        onClick={() => setSearchDrawerOpen(true)}
+      >
+        <Tune />
+      </Fab>
     </Box>
   );
 }
