@@ -188,7 +188,8 @@ function App() {
               bgcolor: '#fafafa',
               minHeight: '100vh',
               position: 'relative',
-              overflow: 'auto'
+              overflow: 'auto',
+              p: 0 // Remove any padding from main container
             }}
           >
             {/* Top Header Bar for Mobile */}
@@ -239,7 +240,7 @@ function App() {
 
             {/* Page Content */}
             <Box sx={{ 
-              p: { xs: 2, md: 4 },
+              p: 0, // Remove all padding
               width: '100%',
               maxWidth: '100%',
               overflow: 'auto'
