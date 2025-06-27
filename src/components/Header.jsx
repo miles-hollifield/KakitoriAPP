@@ -1,48 +1,114 @@
-import { Link } from 'react-router-dom';
-import UserAvatar from './UserAvatar';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, IconButton, Badge, Avatar, TextField, InputAdornment } from '@mui/material';
+import { Search, Notifications, Settings } from '@mui/icons-material';
 
-// Header component for Kakitori
-export default function Header() {
+// Modern Header component for main content area
+export default function ModernHeader({ title, subtitle, showSearch = false }) {
   return (
-    <Box component="header" sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      height: 40,
-      px: 2,
-      bgcolor: '#fff',
-      borderBottom: '1px solid #eee',
-      boxShadow: '0 1px 4px #0001',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 200,
-      color: '#000'
-    }}>
-      <Link to="/" style={{ textDecoration: 'none' }}>
-        <Typography variant="h5" sx={{ 
-          fontFamily: 'serif', 
-          color: '#b8862b', 
-          fontWeight: 700, 
-          letterSpacing: 2,
-          '&:hover': { color: '#a0752a' }
-        }}>
-          Kakitori
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        mb: 4,
+        pb: 2,
+        borderBottom: '1px solid #e5e7eb',
+      }}
+    >
+      {/* Left side - Title and subtitle */}
+      <Box>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontWeight: 700,
+            color: '#333',
+            mb: 0.5
+          }}
+        >
+          {title}
         </Typography>
-      </Link>
-      <Link to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          '&:hover': { opacity: 0.8 }
-        }}>
-          <UserAvatar />
-          <Typography variant="body2">John Doe</Typography>
-        </Box>
-      </Link>
+        {subtitle && (
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: '#666'
+            }}
+          >
+            {subtitle}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Right side - Search and actions */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {showSearch && (
+          <TextField
+            placeholder="Search..."
+            size="small"
+            sx={{
+              width: 300,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 3,
+                bgcolor: '#fff',
+                '& fieldset': {
+                  borderColor: '#d1d5db',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#b8862b',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#b8862b',
+                },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: '#666', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+
+        <IconButton
+          sx={{
+            bgcolor: '#fff',
+            border: '1px solid #e5e7eb',
+            '&:hover': {
+              bgcolor: '#f9fafb',
+            },
+          }}
+        >
+          <Badge badgeContent={3} color="error">
+            <Notifications sx={{ color: '#666', fontSize: 20 }} />
+          </Badge>
+        </IconButton>
+
+        <IconButton
+          sx={{
+            bgcolor: '#fff',
+            border: '1px solid #e5e7eb',
+            '&:hover': {
+              bgcolor: '#f9fafb',
+            },
+          }}
+        >
+          <Settings sx={{ color: '#666', fontSize: 20 }} />
+        </IconButton>
+
+        <Avatar 
+          sx={{ 
+            bgcolor: '#b8862b',
+            width: 40,
+            height: 40,
+            cursor: 'pointer',
+            border: '2px solid #fff',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+        >
+          JD
+        </Avatar>
+      </Box>
     </Box>
   );
 }
