@@ -1,10 +1,10 @@
-// components/KanjiCatalog.jsx
 import {
   Box,
   Typography,
   Pagination
 } from '@mui/material';
-import KanjiCardView from '../kanji/KanjiCardView';
+import KanjiCardView from './KanjiCardView';
+import KanjiListView from './KanjiListView';
 
 export default function KanjiCatalog({ 
   kanji, 
@@ -13,7 +13,10 @@ export default function KanjiCatalog({
   onPageChange,
   searchTerm,
   jlptFilter,
-  onToggleFavorite
+  onToggleFavorite,
+  viewMode = 'cards',
+  onKanjiSelect,
+  onPlayAudio
 }) {
   const totalPages = Math.ceil(kanji.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -27,7 +30,7 @@ export default function KanjiCatalog({
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+    <Box sx={{ maxWidth: '100%', mx: 'auto' }}>
       {/* Results Header */}
       <Box sx={{ 
         display: 'flex', 
@@ -46,13 +49,23 @@ export default function KanjiCatalog({
         )}
       </Box>
 
-      {/* Kanji Cards using existing component */}
+      {/* Kanji Display */}
       {currentKanji.length > 0 ? (
         <>
-          <KanjiCardView 
-            kanji={currentKanji}
-            onToggleFavorite={onToggleFavorite}
-          />
+          {viewMode === 'cards' ? (
+            <KanjiCardView 
+              kanji={currentKanji}
+              onToggleFavorite={onToggleFavorite}
+              onKanjiSelect={onKanjiSelect}
+            />
+          ) : (
+            <KanjiListView
+              kanji={currentKanji}
+              onToggleFavorite={onToggleFavorite}
+              onKanjiSelect={onKanjiSelect}
+              onPlayAudio={onPlayAudio}
+            />
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

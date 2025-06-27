@@ -10,22 +10,31 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
-  Card,
-  CardContent,
   IconButton,
-  Chip,
-  Pagination
+  Fab
 } from '@mui/material';
-import { Search, Star, StarBorder, VolumeUp } from '@mui/icons-material';
-import { sampleKanji, jlptColors } from '../services/mockData';
+import { Search, FilterList, ViewModule, ViewList } from '@mui/icons-material';
+import { sampleKanji } from '../services/mockData';
+
+// Import our existing components
+import KanjiCardView from '../features/kanji/KanjiCardView';
+import KanjiListView from '../features/kanji/KanjiListView';
+import KanjiCatalog from '../features/kanji/KanjiCatalog';
+import KanjiSearchDrawer from '../features/kanji/KanjiSearchDrawer';
+import KanjiDetailModal from '../features/kanji/KanjiDetailModal';
 
 export default function Kanji() {
   const [searchTerm, setSearchTerm] = useState('');
   const [jlptFilter, setJlptFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [kanjiList, setKanjiList] = useState(sampleKanji);
-  const itemsPerPage = 20; // Show 20 kanji per page for better grid layout
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
+  const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
+  const [selectedKanji, setSelectedKanji] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({});
+  
+  const itemsPerPage = 20;
 
   const toggleFavorite = (kanjiId) => {
     setKanjiList(prev => prev.map(kanji => 
@@ -35,36 +44,62 @@ export default function Kanji() {
     ));
   };
 
-  // Filter kanji based on search and JLPT level
+  const handleKanjiSelect = (kanji) => {
+    setSelectedKanji(kanji);
+    setDetailModalOpen(true);
+  };
+
+  const playAudio = (text) => {
+    // Audio playback functionality would be implemented here
+    console.log(`Playing audio for: ${text}`);
+  };
+
+  // Enhanced filter function that includes advanced filters
   const filteredKanji = useMemo(() => {
     return kanjiList.filter(kanji => {
+      // Basic search filter
       const matchesSearch = searchTerm === '' || 
         kanji.character.includes(searchTerm) ||
         kanji.meaning.toLowerCase().includes(searchTerm.toLowerCase()) ||
         kanji.readings.on.includes(searchTerm) ||
         kanji.readings.kun.includes(searchTerm);
       
+      // JLPT filter
       const matchesJLPT = jlptFilter === '' || kanji.jlptLevel === jlptFilter;
       
-      return matchesSearch && matchesJLPT;
+      // Advanced filters
+      const matchesAdvanced = Object.entries(advancedFilters).every(([key, value]) => {
+        if (!value || (Array.isArray(value) && value.length === 0)) return true;
+        
+        switch (key) {
+          case 'jlptLevels':
+            return value.length === 0 || value.includes(kanji.jlptLevel);
+          case 'strokeRange':
+            return kanji.strokes >= value[0] && kanji.strokes <= value[1];
+          case 'frequency':
+            return value.length === 0 || value.includes(kanji.frequency);
+          case 'character':
+            return !value || kanji.character.includes(value);
+          case 'meaning':
+            return !value || kanji.meaning.toLowerCase().includes(value.toLowerCase());
+          case 'reading':
+            return !value || kanji.readings.on.includes(value) || kanji.readings.kun.includes(value);
+          default:
+            return true;
+        }
+      });
+      
+      return matchesSearch && matchesJLPT && matchesAdvanced;
     });
-  }, [searchTerm, jlptFilter, kanjiList]);
+  }, [searchTerm, jlptFilter, kanjiList, advancedFilters]);
 
   // Reset to page 1 when search changes
   useMemo(() => {
     setCurrentPage(1);
-  }, [searchTerm, jlptFilter]);
+  }, [searchTerm, jlptFilter, advancedFilters]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredKanji.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentKanji = filteredKanji.slice(startIndex, startIndex + itemsPerPage);
-
-  const getResultsText = () => {
-    if (searchTerm || jlptFilter) {
-      return `Found ${filteredKanji.length} kanji`;
-    }
-    return `Showing ${filteredKanji.length} kanji`;
+  const handleAdvancedSearch = (filters) => {
+    setAdvancedFilters(filters);
   };
 
   return (
@@ -102,302 +137,156 @@ export default function Kanji() {
           </Typography>
         </Box>
 
-        {/* Search Controls */}
+        {/* Search Controls - FIXED LAYOUT */}
         <Paper 
           sx={{ 
             p: 3,
             mb: 4, 
             borderRadius: 3,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            height: '100px' // FIXED HEIGHT
           }}
         >
-          <Grid container spacing={3} alignItems="center">
-            {/* Search Input */}
-            <Grid size={{ xs: 12, md: 8 }}>
-              <TextField
-                fullWidth
-                placeholder="Search by character, meaning, or reading..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: '#666' }} />
-                    </InputAdornment>
-                  ),
-                }}
+          {/* Using CSS Grid for consistent layout */}
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 300px 100px', // FIXED column sizes
+            gap: 3,
+            alignItems: 'center',
+            height: '56px' // FIXED HEIGHT for form elements
+          }}>
+            {/* Search Input - Takes remaining space */}
+            <TextField
+              fullWidth
+              placeholder="Search by character, meaning, or reading..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: '#666' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  height: 56, // FIXED HEIGHT
+                  '&:hover fieldset': {
+                    borderColor: '#b8862b',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#b8862b',
+                  },
+                },
+              }}
+            />
+            
+            {/* JLPT Filter - FIXED WIDTH */}
+            <FormControl fullWidth>
+              <InputLabel>JLPT Level</InputLabel>
+              <Select
+                value={jlptFilter}
+                label="JLPT Level"
+                onChange={(e) => setJlptFilter(e.target.value)}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    height: 56,
-                    '&:hover fieldset': {
-                      borderColor: '#b8862b',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#b8862b',
-                    },
+                  height: 56, // FIXED HEIGHT
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#b8862b',
                   },
                 }}
-              />
-            </Grid>
-            
-            {/* JLPT Filter */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth>
-                <InputLabel>JLPT Level</InputLabel>
-                <Select
-                  value={jlptFilter}
-                  label="JLPT Level"
-                  onChange={(e) => setJlptFilter(e.target.value)}
-                  sx={{
-                    height: 56,
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#b8862b',
-                    },
-                  }}
-                >
-                  <MenuItem value="">All Levels</MenuItem>
-                  <MenuItem value="N5">N5 - Beginner</MenuItem>
-                  <MenuItem value="N4">N4 - Elementary</MenuItem>
-                  <MenuItem value="N3">N3 - Intermediate</MenuItem>
-                  <MenuItem value="N2">N2 - Upper Intermediate</MenuItem>
-                  <MenuItem value="N1">N1 - Advanced</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+              >
+                <MenuItem value="">All Levels</MenuItem>
+                <MenuItem value="N5">N5 - Beginner</MenuItem>
+                <MenuItem value="N4">N4 - Elementary</MenuItem>
+                <MenuItem value="N3">N3 - Intermediate</MenuItem>
+                <MenuItem value="N2">N2 - Upper Intermediate</MenuItem>
+                <MenuItem value="N1">N1 - Advanced</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* View Mode Toggle - FIXED WIDTH */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1,
+              justifyContent: 'center'
+            }}>
+              <IconButton
+                onClick={() => setViewMode('cards')}
+                sx={{
+                  width: 40, // FIXED SIZE
+                  height: 40, // FIXED SIZE
+                  bgcolor: viewMode === 'cards' ? '#b8862b' : 'transparent',
+                  color: viewMode === 'cards' ? 'white' : '#666',
+                  '&:hover': {
+                    bgcolor: viewMode === 'cards' ? '#a0752a' : 'rgba(184, 134, 43, 0.1)'
+                  }
+                }}
+              >
+                <ViewModule />
+              </IconButton>
+              <IconButton
+                onClick={() => setViewMode('list')}
+                sx={{
+                  width: 40, // FIXED SIZE
+                  height: 40, // FIXED SIZE
+                  bgcolor: viewMode === 'list' ? '#b8862b' : 'transparent',
+                  color: viewMode === 'list' ? 'white' : '#666',
+                  '&:hover': {
+                    bgcolor: viewMode === 'list' ? '#a0752a' : 'rgba(184, 134, 43, 0.1)'
+                  }
+                }}
+              >
+                <ViewList />
+              </IconButton>
+            </Box>
+          </Box>
         </Paper>
 
-        {/* Results Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
-        }}>
-          <Typography variant="h6" sx={{ color: '#333', fontWeight: 600 }}>
-            {getResultsText()}
-          </Typography>
-          
-          {totalPages > 1 && (
-            <Typography variant="body2" sx={{ color: '#666' }}>
-              Page {currentPage} of {totalPages}
-            </Typography>
-          )}
-        </Box>
+        {/* Use KanjiCatalog component for the main content */}
+        <KanjiCatalog
+          kanji={filteredKanji}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          searchTerm={searchTerm}
+          jlptFilter={jlptFilter}
+          onToggleFavorite={toggleFavorite}
+          viewMode={viewMode}
+          onKanjiSelect={handleKanjiSelect}
+          onPlayAudio={playAudio}
+        />
 
-        {/* Kanji Grid */}
-        {currentKanji.length > 0 ? (
-          <>
-            <Grid container spacing={3}>
-              {currentKanji.map((kanjiItem) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2.4 }} key={kanjiItem.id}>
-                  <Card 
-                    sx={{ 
-                      height: 280, // Fixed height for all cards
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ 
-                      p: 2.5, 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}>
-                      {/* Header Section */}
-                      <Box>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'flex-start', 
-                          mb: 2
-                        }}>
-                          <Typography
-                            variant="h1"
-                            sx={{
-                              fontFamily: 'serif',
-                              color: '#333',
-                              fontWeight: 400,
-                              lineHeight: 1,
-                              fontSize: '3rem'
-                            }}
-                          >
-                            {kanjiItem.character}
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(kanjiItem.id);
-                              }}
-                            >
-                              {kanjiItem.isFavorite ? (
-                                <Star sx={{ color: '#ff9800', fontSize: 20 }} />
-                              ) : (
-                                <StarBorder sx={{ color: '#ccc', fontSize: 20 }} />
-                              )}
-                            </IconButton>
-                            <IconButton size="small">
-                              <VolumeUp sx={{ color: '#666', fontSize: 20 }} />
-                            </IconButton>
-                          </Box>
-                        </Box>
+        {/* Advanced Search FAB */}
+        <Fab
+          color="primary"
+          onClick={() => setSearchDrawerOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            bgcolor: '#b8862b',
+            '&:hover': {
+              bgcolor: '#a0752a'
+            }
+          }}
+        >
+          <FilterList />
+        </Fab>
 
-                        {/* Meaning */}
-                        <Typography 
-                          variant="h6" 
-                          sx={{ 
-                            fontWeight: 600, 
-                            mb: 2, 
-                            color: '#b8862b',
-                            fontSize: '1.1rem',
-                            lineHeight: 1.3,
-                            minHeight: 44, // Ensure consistent spacing
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                          }}
-                        >
-                          {kanjiItem.meaning}
-                        </Typography>
+        {/* Advanced Search Drawer */}
+        <KanjiSearchDrawer
+          open={searchDrawerOpen}
+          onClose={() => setSearchDrawerOpen(false)}
+          onSearch={handleAdvancedSearch}
+          currentFilters={advancedFilters}
+        />
 
-                        {/* Readings */}
-                        <Box sx={{ mb: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: '#666', minWidth: 24, fontSize: '0.75rem', fontWeight: 600 }}>
-                              On:
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                fontWeight: 500, 
-                                flex: 1, 
-                                fontSize: '0.75rem',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {kanjiItem.readings.on}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="caption" sx={{ color: '#666', minWidth: 24, fontSize: '0.75rem', fontWeight: 600 }}>
-                              Kun:
-                            </Typography>
-                            <Typography 
-                              variant="caption" 
-                              sx={{ 
-                                fontWeight: 500, 
-                                flex: 1, 
-                                fontSize: '0.75rem',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {kanjiItem.readings.kun}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-
-                      {/* Footer Section */}
-                      <Box>
-                        {/* Chips */}
-                        <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-                          <Chip 
-                            label={kanjiItem.jlptLevel} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: jlptColors[kanjiItem.jlptLevel],
-                              color: 'white',
-                              fontSize: '0.65rem',
-                              height: 20,
-                              fontWeight: 600
-                            }} 
-                          />
-                          <Chip 
-                            label={`${kanjiItem.strokes}`} 
-                            size="small" 
-                            variant="outlined"
-                            sx={{ 
-                              fontSize: '0.65rem', 
-                              height: 20,
-                              borderColor: '#ccc'
-                            }}
-                          />
-                          <Chip 
-                            label={kanjiItem.frequency} 
-                            size="small" 
-                            color="success"
-                            variant="outlined"
-                            sx={{ 
-                              fontSize: '0.65rem', 
-                              height: 20
-                            }}
-                          />
-                        </Box>
-
-                        {/* Grade info */}
-                        <Typography variant="caption" sx={{ color: '#999', fontSize: '0.7rem' }}>
-                          {kanjiItem.grade} • {kanjiItem.strokes} strokes
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-                <Pagination 
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(event, page) => setCurrentPage(page)}
-                  color="primary"
-                  size="large"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      '&.Mui-selected': {
-                        bgcolor: '#b8862b',
-                        '&:hover': {
-                          bgcolor: '#a0752a',
-                        }
-                      }
-                    }
-                  }}
-                />
-              </Box>
-            )}
-          </>
-        ) : (
-          /* No results */
-          <Paper sx={{ 
-            textAlign: 'center', 
-            py: 8,
-            borderRadius: 3,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-          }}>
-            <Typography variant="h6" sx={{ color: '#666', mb: 2 }}>
-              No kanji found
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#999' }}>
-              Try adjusting your search terms or filters
-            </Typography>
-          </Paper>
-        )}
+        {/* Kanji Detail Modal */}
+        <KanjiDetailModal
+          open={detailModalOpen}
+          onClose={() => setDetailModalOpen(false)}
+          kanji={selectedKanji}
+        />
       </Container>
     </Box>
   );

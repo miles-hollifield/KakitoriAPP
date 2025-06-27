@@ -13,7 +13,7 @@ import {
   VolumeUp
 } from '@mui/icons-material';
 
-export default function KanjiListView({ kanji, onToggleFavorite, onPlayAudio }) {
+export default function KanjiListView({ kanji, onToggleFavorite, onPlayAudio, onKanjiSelect }) {
   const KanjiListItem = ({ kanjiItem }) => (
     <ListItem 
       sx={{ 
@@ -24,6 +24,7 @@ export default function KanjiListView({ kanji, onToggleFavorite, onPlayAudio }) 
           bgcolor: 'rgba(184, 134, 43, 0.04)' 
         }
       }}
+      onClick={() => onKanjiSelect && onKanjiSelect(kanjiItem)}
     >
       <Box sx={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 3 }}>
         {/* Large Kanji Character */}
@@ -100,7 +101,10 @@ export default function KanjiListView({ kanji, onToggleFavorite, onPlayAudio }) 
           </IconButton>
           <IconButton 
             size="small" 
-            onClick={() => onPlayAudio(kanjiItem.character)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlayAudio && onPlayAudio(kanjiItem.character);
+            }}
           >
             <VolumeUp sx={{ color: '#666' }} />
           </IconButton>

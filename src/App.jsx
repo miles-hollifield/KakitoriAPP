@@ -15,6 +15,7 @@ import AITutor from './pages/AITutor';
 import Dialog from './pages/Dialog';
 import Community from './pages/Community';
 import Profile from './pages/Profile';
+import Analytics from './pages/Analytics'; // Add this import
 import './App.css';
 
 // Create a modern theme with original colors
@@ -151,11 +152,18 @@ function App() {
           bgcolor: '#fafafa', 
           minHeight: '100vh',
           width: '100%',
-          overflow: 'hidden'
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box'
         }}>
           {/* Desktop Sidebar */}
           {!isMobile && (
-            <Sidebar onNavigate={handleSidebarNavigate} />
+            <Box sx={{ 
+              width: 280, 
+              flexShrink: 0 // Prevent sidebar from shrinking
+            }}>
+              <Sidebar onNavigate={handleSidebarNavigate} />
+            </Box>
           )}
 
           {/* Mobile Drawer */}
@@ -178,18 +186,18 @@ function App() {
             </Drawer>
           )}
 
-          {/* Main Content Area */}
+          {/* Main Content Area - This should now stretch to full width */}
           <Box
             component="main"
             sx={{
-              flexGrow: 1,
-              width: isMobile ? '100%' : 'calc(100% - 280px)',
-              ml: isMobile ? 0 : '280px',
+              flexGrow: 1, // Take up remaining space
               bgcolor: '#fafafa',
               minHeight: '100vh',
               position: 'relative',
               overflow: 'auto',
-              p: 0 // Remove any padding from main container
+              // Remove all margins and padding
+              m: 0,
+              p: 0
             }}
           >
             {/* Top Header Bar for Mobile */}
@@ -238,12 +246,18 @@ function App() {
               </Box>
             )}
 
-            {/* Page Content */}
+            {/* Page Content - Remove all constraints */}
             <Box sx={{ 
-              p: 0, // Remove all padding
-              width: '100%',
-              maxWidth: '100%',
-              overflow: 'auto'
+              width: '100%', // Full width
+              minHeight: '100%',
+              margin: 0,
+              padding: 0,
+              boxSizing: 'border-box',
+              '& > *': { // Target all children
+                margin: 0,
+                padding: 0,
+                width: '100%'
+              }
             }}>
               <ErrorBoundary>
                 <Routes>
@@ -259,6 +273,7 @@ function App() {
                   <Route path="/dialog" element={<Dialog />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/analytics" element={<Analytics />} />
                 </Routes>
               </ErrorBoundary>
             </Box>
