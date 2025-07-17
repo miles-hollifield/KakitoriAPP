@@ -8,9 +8,9 @@ import KanjiListView from './KanjiListView';
 
 export default function KanjiCatalog({ 
   kanji, 
+  totalKanji,
+  totalPages,
   currentPage, 
-  itemsPerPage, 
-  onPageChange,
   searchTerm,
   jlptFilter,
   onToggleFavorite,
@@ -18,15 +18,11 @@ export default function KanjiCatalog({
   onKanjiSelect,
   onPlayAudio
 }) {
-  const totalPages = Math.ceil(kanji.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentKanji = kanji.slice(startIndex, startIndex + itemsPerPage);
-
   const getResultsText = () => {
     if (searchTerm || jlptFilter) {
-      return `Found ${kanji.length} kanji`;
+      return `Found ${totalKanji} kanji`;
     }
-    return `Showing ${kanji.length} kanji`;
+    return `Showing ${totalKanji} kanji`;
   };
 
   return (
@@ -49,46 +45,25 @@ export default function KanjiCatalog({
         )}
       </Box>
 
-      {/* Kanji Display */}
-      {currentKanji.length > 0 ? (
+      {/* Kanji Display - NO MORE SLICING! */}
+      {kanji.length > 0 ? (
         <>
           {viewMode === 'cards' ? (
             <KanjiCardView 
-              kanji={currentKanji}
+              kanji={kanji}
               onToggleFavorite={onToggleFavorite}
               onKanjiSelect={onKanjiSelect}
             />
           ) : (
             <KanjiListView
-              kanji={currentKanji}
+              kanji={kanji}
               onToggleFavorite={onToggleFavorite}
               onKanjiSelect={onKanjiSelect}
               onPlayAudio={onPlayAudio}
             />
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Pagination 
-                count={totalPages}
-                page={currentPage}
-                onChange={(event, page) => onPageChange(page)}
-                color="primary"
-                size="large"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    '&.Mui-selected': {
-                      bgcolor: '#b8862b',
-                      '&:hover': {
-                        bgcolor: '#a0752a',
-                      }
-                    }
-                  }
-                }}
-              />
-            </Box>
-          )}
+
         </>
       ) : (
         /* No results */

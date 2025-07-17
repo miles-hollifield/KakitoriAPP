@@ -11,15 +11,13 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Fab,
   Pagination
 } from '@mui/material';
-import { Search, FilterList, ViewModule, ViewList } from '@mui/icons-material';
+import { Search, ViewModule, ViewList } from '@mui/icons-material';
 import { fetchKanji } from '../services/kanjiService';
 
 // Import our existing components
 import KanjiCatalog from '../features/kanji/KanjiCatalog';
-import KanjiSearchDrawer from '../features/kanji/KanjiSearchDrawer';
 import KanjiDetailModal from '../features/kanji/KanjiDetailModal';
 
 export default function Kanji() {
@@ -34,7 +32,6 @@ export default function Kanji() {
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  // Advanced search removed
   
   const itemsPerPage = 20;
 
@@ -60,13 +57,20 @@ export default function Kanji() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchKanji({ search: searchTerm, jlpt: jlptFilter, page: currentPage, limit: itemsPerPage })
+    fetchKanji({ 
+      search: searchTerm, 
+      jlpt: jlptFilter, 
+      page: currentPage, 
+      limit: itemsPerPage 
+    })
       .then(data => {
+        console.log('API Response:', data); // Debug log
         setKanjiList(data.items || []);
         setTotalKanji(data.total || 0);
-        setTotalPages(data.total ? Math.ceil(data.total / itemsPerPage) : 1);
+        setTotalPages(data.pages || 1); // Use pages from API response
       })
-      .catch(() => {
+      .catch(err => {
+        console.error('Fetch error:', err); // Debug log
         setError('Failed to load kanji data');
       })
       .finally(() => setLoading(false));
@@ -76,8 +80,6 @@ export default function Kanji() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, jlptFilter]);
-
-  // Removed unused advanced search handler
 
   return (
     <Box sx={{ bgcolor: '#fafafa', minHeight: '100vh', py: 4 }}>
@@ -92,7 +94,7 @@ export default function Kanji() {
           </Typography>
         </Box>
 
-        {/* Search Controls - FIXED LAYOUT */}
+        {/* Search Controls */}
         <Paper sx={{ p: 3, mb: 4, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', height: '100px' }}>
           <Box sx={{
             display: 'grid',
@@ -101,7 +103,7 @@ export default function Kanji() {
             alignItems: 'center',
             height: '56px'
           }}>
-            {/* Search Input - Takes remaining space */}
+            {/* Search Input */}
             <TextField
               fullWidth
               placeholder="Search by character, meaning, or reading..."
@@ -123,7 +125,7 @@ export default function Kanji() {
               }}
             />
 
-            {/* JLPT Filter - FIXED WIDTH */}
+            {/* JLPT Filter */}
             <FormControl fullWidth>
               <InputLabel>JLPT Level</InputLabel>
               <Select
@@ -141,7 +143,7 @@ export default function Kanji() {
               </Select>
             </FormControl>
 
-            {/* View Mode Toggle - FIXED WIDTH */}
+            {/* View Mode Toggle */}
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
               <IconButton
                 onClick={() => setViewMode('cards')}
@@ -171,21 +173,23 @@ export default function Kanji() {
           </Box>
         </Paper>
 
-        {/* Pagination Controls */}
-        <Pagination
-          count={totalPages}
-          page={currentPage}
-          onChange={(event, value) => setCurrentPage(value)}
-          color="primary"
-          sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}
-        />
+        {/* Top Pagination Controls */}
+        {totalPages > 1 && (
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={(event, value) => setCurrentPage(value)}
+            color="primary"
+            sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}
+          />
+        )}
+        
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography sx={{ fontWeight: 500 }}>
             Showing {kanjiList.length} of {totalKanji} kanji
           </Typography>
         </Box>
 
-        {/* Use KanjiCatalog component for the main content */}
         {/* Loading/Error State */}
         {loading && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -197,11 +201,14 @@ export default function Kanji() {
             <Typography color="error">{error}</Typography>
           </Box>
         )}
+        
+        {/* Main Content - Pass API pagination data directly */}
         {!loading && !error && (
           <KanjiCatalog
             kanji={kanjiList}
+            totalKanji={totalKanji}
+            totalPages={totalPages}
             currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
             searchTerm={searchTerm}
             jlptFilter={jlptFilter}
