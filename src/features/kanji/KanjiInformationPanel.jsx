@@ -104,6 +104,15 @@ export default function KanjiInformationPanel({
     console.log(`Playing audio for ${type}: ${text}`);
   };
 
+  // Format meanings for display
+  const meaningsText = Array.isArray(kanji.meanings) 
+    ? kanji.meanings.join(', ') 
+    : kanji.meanings || 'No meaning available';
+
+  // Get readings arrays
+  const onReadings = kanji.readings?.on || [];
+  const kunReadings = kanji.readings?.kun || [];
+
   return (
     <Paper sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', position: 'sticky', top: 20 }}>
       {/* Header Section */}
@@ -122,48 +131,54 @@ export default function KanjiInformationPanel({
         </Typography>
         
         <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: '#b8862b' }}>
-          {kanji.meaning}
+          {meaningsText}
         </Typography>
         
         <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+          {kanji.jlpt_level && (
+            <Chip 
+              label={kanji.jlpt_level} 
+              sx={{ 
+                bgcolor: jlptColors[kanji.jlpt_level],
+                color: 'white',
+                fontWeight: 600
+              }} 
+            />
+          )}
+          {kanji.grade_level && (
+            <Chip 
+              label={kanji.grade_level} 
+              sx={{ 
+                bgcolor: gradeColors[kanji.grade_level] || '#999',
+                color: kanji.grade_level?.includes('Grade') ? 'white' : 'black',
+                fontWeight: 600
+              }} 
+            />
+          )}
           <Chip 
-            label={kanji.jlptLevel} 
-            sx={{ 
-              bgcolor: jlptColors[kanji.jlptLevel],
-              color: 'white',
-              fontWeight: 600
-            }} 
-          />
-          <Chip 
-            label={kanji.gradeLevel || 'Secondary'} 
-            sx={{ 
-              bgcolor: gradeColors[kanji.gradeLevel || 'Secondary'],
-              color: 'white',
-              fontWeight: 600
-            }} 
-          />
-          <Chip 
-            label={`${kanji.strokes} strokes`} 
+            label={`${kanji.stroke_count} strokes`} 
             variant="outlined"
             sx={{ fontWeight: 600 }}
           />
-          <Chip 
-            label={kanji.frequency || 'High'} 
-            color="success"
-            variant="outlined"
-          />
+          {kanji.frequency && (
+            <Chip 
+              label={kanji.frequency} 
+              color="success"
+              variant="outlined"
+            />
+          )}
         </Stack>
 
         {/* Action Buttons */}
         <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
           <IconButton 
-            onClick={() => onToggleFavorite(kanji.id)}
+            onClick={() => onToggleFavorite && onToggleFavorite(kanji.id)}
             sx={{ 
-              bgcolor: kanji.isFavorite ? 'rgba(255, 152, 0, 0.1)' : 'transparent',
+              bgcolor: kanji.is_favorite ? 'rgba(255, 152, 0, 0.1)' : 'transparent',
               '&:hover': { bgcolor: 'rgba(255, 152, 0, 0.2)' }
             }}
           >
-            {kanji.isFavorite ? 
+            {kanji.is_favorite ? 
               <Star sx={{ color: '#ff9800' }} /> : 
               <StarBorder sx={{ color: '#ccc' }} />
             }
@@ -176,7 +191,7 @@ export default function KanjiInformationPanel({
             <VolumeUp sx={{ color: '#2196f3' }} />
           </IconButton>
           
-          {kanji.isLearned && (
+          {kanji.is_learned && (
             <IconButton disabled>
               <CheckCircle sx={{ color: '#4caf50' }} />
             </IconButton>
@@ -213,13 +228,21 @@ export default function KanjiInformationPanel({
                   <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
                     On-yomi (音読み)
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h5" sx={{ color: '#b8862b', fontWeight: 600 }}>
-                      {kanji.readings.on}
-                    </Typography>
-                    <IconButton size="small" onClick={() => playAudio(kanji.readings.on, 'on-yomi')}>
-                      <VolumeUp fontSize="small" />
-                    </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    {onReadings.length > 0 ? (
+                      onReadings.map((reading, index) => (
+                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant="h6" sx={{ color: '#b8862b', fontWeight: 600 }}>
+                            {reading}
+                          </Typography>
+                          <IconButton size="small" onClick={() => playAudio(reading, 'on-yomi')}>
+                            <VolumeUp fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#999' }}>No on-yomi readings</Typography>
+                    )}
                   </Box>
                 </Card>
               </Grid>
@@ -229,13 +252,21 @@ export default function KanjiInformationPanel({
                   <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
                     Kun-yomi (訓読み)
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="h5" sx={{ color: '#b8862b', fontWeight: 600 }}>
-                      {kanji.readings.kun}
-                    </Typography>
-                    <IconButton size="small" onClick={() => playAudio(kanji.readings.kun, 'kun-yomi')}>
-                      <VolumeUp fontSize="small" />
-                    </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    {kunReadings.length > 0 ? (
+                      kunReadings.map((reading, index) => (
+                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant="h6" sx={{ color: '#b8862b', fontWeight: 600 }}>
+                            {reading}
+                          </Typography>
+                          <IconButton size="small" onClick={() => playAudio(reading, 'kun-yomi')}>
+                            <VolumeUp fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#999' }}>No kun-yomi readings</Typography>
+                    )}
                   </Box>
                 </Card>
               </Grid>
@@ -244,36 +275,57 @@ export default function KanjiInformationPanel({
 
           <Divider />
 
+          {/* Nanori readings if available */}
+          {kanji.nanori && kanji.nanori.length > 0 && (
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
+                Nanori (Name readings)
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {kanji.nanori.map((reading, index) => (
+                  <Chip 
+                    key={index}
+                    label={reading} 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ color: '#666' }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          <Divider />
+
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#333' }}>
               Example Words
             </Typography>
-            <List sx={{ p: 0 }}>
-              {kanji.examples?.map((example, index) => {
-                const [word, reading] = example.split(' (');
-                const cleanReading = reading?.replace(')', '');
-                return (
+            {kanji.examples && kanji.examples.length > 0 ? (
+              <List sx={{ p: 0 }}>
+                {kanji.examples.slice(0, 5).map((example, index) => (
                   <ListItem key={index} sx={{ px: 0, py: 1, borderBottom: '1px solid #f0f0f0' }}>
                     <ListItemText 
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Typography variant="h6" sx={{ fontFamily: 'serif', color: '#333' }}>
-                            {word}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#666' }}>
-                            ({cleanReading})
+                            {example}
                           </Typography>
                         </Box>
                       }
-                      secondary={kanji.exampleMeanings?.[index] || 'Example meaning'}
+                      secondary="Example compound word"
                     />
-                    <IconButton size="small" onClick={() => playAudio(word, 'compound')}>
+                    <IconButton size="small" onClick={() => playAudio(example, 'compound')}>
                       <VolumeUp fontSize="small" />
                     </IconButton>
                   </ListItem>
-                );
-              })}
-            </List>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body2" sx={{ color: '#666', p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
+                No example words available for this kanji.
+              </Typography>
+            )}
           </Box>
         </Stack>
       </TabPanel>
@@ -285,81 +337,33 @@ export default function KanjiInformationPanel({
             Compound Words
           </Typography>
           
-          <Accordion defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                Kun'yomi Compounds
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {kanji.kunCompounds?.map((compound, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Card sx={{ p: 2, '&:hover': { bgcolor: '#f8f9fa' } }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box>
-                          <Typography variant="h6" sx={{ fontFamily: 'serif' }}>
-                            {compound.word}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#666' }}>
-                            {compound.reading}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#999' }}>
-                            {compound.meaning}
-                          </Typography>
-                        </Box>
-                        <IconButton size="small">
-                          <VolumeUp fontSize="small" />
-                        </IconButton>
+          {kanji.examples && kanji.examples.length > 0 ? (
+            <Grid container spacing={2}>
+              {kanji.examples.map((compound, index) => (
+                <Grid item xs={12} sm={6} key={index}>
+                  <Card sx={{ p: 2, '&:hover': { bgcolor: '#f8f9fa' } }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box>
+                        <Typography variant="h6" sx={{ fontFamily: 'serif' }}>
+                          {compound}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#999' }}>
+                          Compound word
+                        </Typography>
                       </Box>
-                    </Card>
-                  </Grid>
-                )) || (
-                  <Typography variant="body2" sx={{ color: '#666', p: 2 }}>
-                    No kun'yomi compounds available
-                  </Typography>
-                )}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                On'yomi Compounds
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {kanji.onCompounds?.map((compound, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Card sx={{ p: 2, '&:hover': { bgcolor: '#f8f9fa' } }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box>
-                          <Typography variant="h6" sx={{ fontFamily: 'serif' }}>
-                            {compound.word}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#666' }}>
-                            {compound.reading}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: '#999' }}>
-                            {compound.meaning}
-                          </Typography>
-                        </Box>
-                        <IconButton size="small">
-                          <VolumeUp fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Card>
-                  </Grid>
-                )) || (
-                  <Typography variant="body2" sx={{ color: '#666', p: 2 }}>
-                    No on'yomi compounds available
-                  </Typography>
-                )}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
+                      <IconButton size="small" onClick={() => playAudio(compound, 'compound')}>
+                        <VolumeUp fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Typography variant="body2" sx={{ color: '#666', p: 4, textAlign: 'center', bgcolor: '#f8f9fa', borderRadius: 1 }}>
+              No compound words available for this kanji.
+            </Typography>
+          )}
         </Stack>
       </TabPanel>
 
@@ -396,23 +400,33 @@ export default function KanjiInformationPanel({
               Stroke Information
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={6}>
+              <Grid item xs={4}>
                 <Card sx={{ p: 2, textAlign: 'center' }}>
                   <Typography variant="h4" sx={{ color: '#b8862b', fontWeight: 700 }}>
-                    {kanji.strokes}
+                    {kanji.stroke_count}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#666' }}>
                     Total Strokes
                   </Typography>
                 </Card>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={4}>
                 <Card sx={{ p: 2, textAlign: 'center' }}>
                   <Typography variant="h4" sx={{ color: '#4caf50', fontWeight: 700 }}>
-                    {kanji.radical || '水'}
+                    {kanji.radical || '—'}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#666' }}>
                     Radical
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid item xs={4}>
+                <Card sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="h4" sx={{ color: '#ff9800', fontWeight: 700 }}>
+                    {kanji.unicode || '—'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#666' }}>
+                    Unicode
                   </Typography>
                 </Card>
               </Grid>
@@ -425,7 +439,7 @@ export default function KanjiInformationPanel({
         {/* Statistics Tab */}
         <Stack spacing={3} sx={{ px: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, color: '#333' }}>
-            Learning Statistics
+            Kanji Information
           </Typography>
           
           <Grid container spacing={3}>
@@ -438,23 +452,23 @@ export default function KanjiInformationPanel({
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2">Mastery Level</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {kanji.isLearned ? '100%' : '0%'}
+                      {kanji.is_learned ? '100%' : '0%'}
                     </Typography>
                   </Box>
                   <LinearProgress 
                     variant="determinate" 
-                    value={kanji.isLearned ? 100 : 0}
+                    value={kanji.is_learned ? 100 : 0}
                     sx={{ 
                       height: 8, 
                       borderRadius: 4,
                       '& .MuiLinearProgress-bar': { 
-                        bgcolor: kanji.isLearned ? '#4caf50' : '#ff9800' 
+                        bgcolor: kanji.is_learned ? '#4caf50' : '#ff9800' 
                       }
                     }} 
                   />
                 </Box>
                 <Typography variant="caption" sx={{ color: '#666' }}>
-                  Times practiced: {kanji.practiceCount || 0}
+                  Status: {kanji.is_learned ? 'Learned' : 'Learning'}
                 </Typography>
               </Card>
             </Grid>
@@ -462,31 +476,35 @@ export default function KanjiInformationPanel({
             <Grid item xs={12} md={6}>
               <Card sx={{ p: 3 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                  Usage Stats
+                  Kanji Details
                 </Typography>
                 <Stack spacing={1}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Frequency Rank</Typography>
+                    <Typography variant="body2">JLPT Level</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      #{kanji.frequencyRank || 'N/A'}
+                      {kanji.jlpt_level || 'N/A'}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Common Words</Typography>
+                    <Typography variant="body2">Grade Level</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {kanji.grade_level || 'N/A'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Frequency</Typography>
+                    <Chip 
+                      label={kanji.frequency || 'Unknown'} 
+                      size="small"
+                      color="success"
+                      variant="outlined"
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Examples</Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {kanji.examples?.length || 0}
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Difficulty</Typography>
-                    <Chip 
-                      label={kanji.difficultyLevel || 'Medium'} 
-                      size="small"
-                      color={
-                        kanji.difficultyLevel === 'beginner' ? 'success' :
-                        kanji.difficultyLevel === 'intermediate' ? 'warning' : 'error'
-                      }
-                    />
                   </Box>
                 </Stack>
               </Card>
@@ -502,7 +520,7 @@ export default function KanjiInformationPanel({
             fullWidth
             variant="contained"
             startIcon={<PlayArrow />}
-            onClick={() => onPractice(kanji)}
+            onClick={() => onPractice && onPractice(kanji)}
             sx={{ 
               bgcolor: '#b8862b',
               '&:hover': { bgcolor: '#a0752a' }
@@ -528,12 +546,12 @@ export default function KanjiInformationPanel({
             </Grid>
             
             <Grid item xs={6}>
-              {!kanji.isLearned ? (
+              {!kanji.is_learned ? (
                 <Button
                   fullWidth
                   variant="outlined"
                   startIcon={<CheckCircle />}
-                  onClick={() => onMarkAsLearned(kanji.id)}
+                  onClick={() => onMarkAsLearned && onMarkAsLearned(kanji.id)}
                   sx={{ 
                     borderColor: '#4caf50',
                     color: '#4caf50',

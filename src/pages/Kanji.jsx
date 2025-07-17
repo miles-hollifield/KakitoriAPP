@@ -18,7 +18,7 @@ import { fetchKanji } from '../services/kanjiService';
 
 // Import our existing components
 import KanjiCatalog from '../features/kanji/KanjiCatalog';
-import KanjiDetailModal from '../features/kanji/KanjiDetailModal';
+import KanjiDetailDrawer from '../features/kanji/KanjiDetailDrawer';
 
 export default function Kanji() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +31,7 @@ export default function Kanji() {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [selectedKanji, setSelectedKanji] = useState(null);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   
   const itemsPerPage = 20;
 
@@ -45,7 +45,7 @@ export default function Kanji() {
 
   const handleKanjiSelect = (kanji) => {
     setSelectedKanji(kanji);
-    setDetailModalOpen(true);
+    setDetailDrawerOpen(true);
   };
 
   const playAudio = (text) => {
@@ -219,11 +219,12 @@ export default function Kanji() {
           />
         )}
 
-        {/* Kanji Detail Modal */}
-        <KanjiDetailModal
-          open={detailModalOpen}
-          onClose={() => setDetailModalOpen(false)}
+        {/* Kanji Detail Drawer */}
+        <KanjiDetailDrawer
+          open={detailDrawerOpen}
+          onClose={() => setDetailDrawerOpen(false)}
           kanji={selectedKanji}
+          onToggleFavorite={toggleFavorite}
         />
       </Container>
     </Box>

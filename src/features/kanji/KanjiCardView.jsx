@@ -9,9 +9,29 @@ import {
 import {
   Star,
   StarBorder,
-  VolumeUp
+  VolumeUp,
+  CheckCircle
 } from '@mui/icons-material';
-import { jlptColors } from '../../services/mockData';
+
+const jlptColors = {
+  N5: '#4caf50',
+  N4: '#8bc34a', 
+  N3: '#ff9800',
+  N2: '#ff5722',
+  N1: '#f44336'
+};
+
+const gradeColors = {
+  'Grade 1': '#4caf50',
+  'Grade 2': '#66bb6a',
+  'Grade 3': '#81c784',
+  'Grade 4': '#a5d6a7',
+  'Grade 5': '#c8e6c9',
+  'Grade 6': '#e8f5e8',
+  'Secondary': '#ff9800',
+  'Jinmeiyō': '#9c27b0',
+  'Hyōgai': '#607d8b'
+};
 
 export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }) {
   return (
@@ -25,7 +45,7 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
         <Card 
           key={kanjiItem.id}
           sx={{ 
-            height: '280px', // FIXED height - every card exactly the same
+            height: '380px', // Further increased height to prevent text cutoff
             cursor: 'pointer',
             transition: 'all 0.2s ease-in-out',
             display: 'flex',
@@ -72,12 +92,15 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                       onToggleFavorite(kanjiItem.id);
                     }}
                   >
-                    {kanjiItem.isFavorite ? (
+                    {kanjiItem.is_favorite ? (
                       <Star sx={{ color: '#ff9800', fontSize: 20 }} />
                     ) : (
                       <StarBorder sx={{ color: '#ccc', fontSize: 20 }} />
                     )}
                   </IconButton>
+                  {kanjiItem.is_learned && (
+                    <CheckCircle sx={{ color: '#4caf50', fontSize: 18 }} />
+                  )}
                   <IconButton 
                     size="small"
                     onClick={(e) => {
@@ -90,8 +113,8 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                 </Box>
               </Box>
 
-              {/* Meaning - Fixed height container */}
-              <Box sx={{ height: 44, mb: 2 }}>
+              {/* Meanings - Fixed height container */}
+              <Box sx={{ height: 60, mb: 2 }}>
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -105,12 +128,14 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                     overflow: 'hidden'
                   }}
                 >
-                  {kanjiItem.meaning}
+                  {Array.isArray(kanjiItem.meanings) 
+                    ? kanjiItem.meanings.join(', ') 
+                    : kanjiItem.meanings || 'No meaning available'}
                 </Typography>
               </Box>
 
               {/* Readings - Fixed height container */}
-              <Box sx={{ height: 50, mb: 2 }}>
+              <Box sx={{ height: 70, mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                   <Typography variant="caption" sx={{ color: '#666', minWidth: 24, fontSize: '0.75rem', fontWeight: 600 }}>
                     On:
@@ -126,7 +151,7 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {kanjiItem.readings.on}
+                    {kanjiItem.readings?.on?.join(', ') || 'N/A'}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -144,7 +169,7 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {kanjiItem.readings.kun}
+                    {kanjiItem.readings?.kun?.join(', ') || 'N/A'}
                   </Typography>
                 </Box>
               </Box>
@@ -153,20 +178,37 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
             {/* Bottom Section - Chips and Meta Info */}
             <Box>
               {/* Chips - Fixed height container */}
-              <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap', minHeight: 32 }}>
+              <Box sx={{ display: 'flex', gap: 0.5, mb: 3, flexWrap: 'wrap', minHeight: 56 }}>
+                {kanjiItem.jlpt_level && (
+                  <Chip 
+                    label={kanjiItem.jlpt_level} 
+                    size="small" 
+                    sx={{ 
+                      bgcolor: jlptColors[kanjiItem.jlpt_level] || '#666',
+                      color: 'white',
+                      fontSize: '0.65rem',
+                      height: 20,
+                      fontWeight: 600
+                    }} 
+                  />
+                )}
+                
+                {kanjiItem.grade_level && (
+                  <Chip 
+                    label={kanjiItem.grade_level} 
+                    size="small" 
+                    sx={{ 
+                      bgcolor: gradeColors[kanjiItem.grade_level] || '#999',
+                      color: kanjiItem.grade_level?.includes('Grade') ? 'white' : 'black',
+                      fontSize: '0.65rem',
+                      height: 20,
+                      fontWeight: 600
+                    }} 
+                  />
+                )}
+                
                 <Chip 
-                  label={kanjiItem.jlptLevel} 
-                  size="small" 
-                  sx={{ 
-                    bgcolor: jlptColors[kanjiItem.jlptLevel],
-                    color: 'white',
-                    fontSize: '0.65rem',
-                    height: 20,
-                    fontWeight: 600
-                  }} 
-                />
-                <Chip 
-                  label={`${kanjiItem.strokes}`} 
+                  label={`${kanjiItem.stroke_count} strokes`} 
                   size="small" 
                   variant="outlined"
                   sx={{ 
@@ -175,22 +217,28 @@ export default function KanjiCardView({ kanji, onToggleFavorite, onKanjiSelect }
                     borderColor: '#ccc'
                   }}
                 />
-                <Chip 
-                  label={kanjiItem.frequency} 
-                  size="small" 
-                  color="success"
-                  variant="outlined"
-                  sx={{ 
-                    fontSize: '0.65rem', 
-                    height: 20
-                  }}
-                />
+                
+                {kanjiItem.frequency && (
+                  <Chip 
+                    label={kanjiItem.frequency} 
+                    size="small" 
+                    color="success"
+                    variant="outlined"
+                    sx={{ 
+                      fontSize: '0.65rem', 
+                      height: 20
+                    }}
+                  />
+                )}
               </Box>
 
-              {/* Grade info */}
-              <Typography variant="caption" sx={{ color: '#999', fontSize: '0.7rem' }}>
-                {kanjiItem.grade} • {kanjiItem.strokes} strokes
-              </Typography>
+              {/* Unicode and additional info */}
+              <Box sx={{ minHeight: 32 }}>
+                <Typography variant="caption" sx={{ color: '#999', fontSize: '0.7rem', lineHeight: 1.2 }}>
+                  {kanjiItem.unicode && `Unicode: ${kanjiItem.unicode}`}
+                  {kanjiItem.radical && ` • Radical: ${kanjiItem.radical}`}
+                </Typography>
+              </Box>
             </Box>
           </CardContent>
         </Card>
