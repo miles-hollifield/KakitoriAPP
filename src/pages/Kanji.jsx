@@ -173,23 +173,6 @@ export default function Kanji() {
           </Box>
         </Paper>
 
-        {/* Top Pagination Controls */}
-        {totalPages > 1 && (
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={(event, value) => setCurrentPage(value)}
-            color="primary"
-            sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}
-          />
-        )}
-        
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography sx={{ fontWeight: 500 }}>
-            Showing {kanjiList.length} of {totalKanji} kanji
-          </Typography>
-        </Box>
-
         {/* Loading/Error State */}
         {loading && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -209,6 +192,7 @@ export default function Kanji() {
             totalKanji={totalKanji}
             totalPages={totalPages}
             currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
             searchTerm={searchTerm}
             jlptFilter={jlptFilter}

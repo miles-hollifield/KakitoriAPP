@@ -10,7 +10,9 @@ export default function KanjiCatalog({
   kanji, 
   totalKanji,
   totalPages,
-  currentPage, 
+  currentPage,
+  itemsPerPage, 
+  onPageChange,
   searchTerm,
   jlptFilter,
   onToggleFavorite,
@@ -19,10 +21,12 @@ export default function KanjiCatalog({
   onPlayAudio
 }) {
   const getResultsText = () => {
-    if (searchTerm || jlptFilter) {
-      return `Found ${totalKanji} kanji`;
-    }
-    return `Showing ${totalKanji} kanji`;
+    if (kanji.length === 0) return 'No kanji found';
+    
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(startIndex + kanji.length - 1, totalKanji);
+    
+    return `Showing ${startIndex}-${endIndex} of ${totalKanji} kanji`;
   };
 
   return (
@@ -45,9 +49,32 @@ export default function KanjiCatalog({
         )}
       </Box>
 
-      {/* Kanji Display - NO MORE SLICING! */}
+      {/* Kanji Display */}
       {kanji.length > 0 ? (
         <>
+          {/* Top Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <Pagination 
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, page) => onPageChange(page)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    '&.Mui-selected': {
+                      bgcolor: '#b8862b',
+                      '&:hover': {
+                        bgcolor: '#a0752a',
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          )}
+
           {viewMode === 'cards' ? (
             <KanjiCardView 
               kanji={kanji}
@@ -63,7 +90,28 @@ export default function KanjiCatalog({
             />
           )}
 
-
+          {/* Bottom Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Pagination 
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, page) => onPageChange(page)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    '&.Mui-selected': {
+                      bgcolor: '#b8862b',
+                      '&:hover': {
+                        bgcolor: '#a0752a',
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          )}
         </>
       ) : (
         /* No results */
