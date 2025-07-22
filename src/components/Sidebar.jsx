@@ -1,4 +1,4 @@
-import { List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider } from '@mui/material';
+import { List, ListItem, ListItemIcon, ListItemText, Box, Typography, Avatar, Divider, IconButton } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
@@ -13,6 +13,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import GridViewIcon from '@mui/icons-material/GridView';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import AddIcon from '@mui/icons-material/Add';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../contexts/useAuth';
 
 const navItems = [
   { text: 'Overview', path: '/', icon: <GridViewIcon fontSize="small" /> },
@@ -38,6 +40,12 @@ const studyStats = [
 // Modern Light Sidebar component for Kakitori
 export default function Sidebar({ onNavigate }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    // Navigation to login will be handled by the ProtectedRoute component
+  };
 
   return (
     <Box
@@ -157,8 +165,9 @@ export default function Sidebar({ onNavigate }) {
         borderTop: '1px solid #f0f0f0',
         flexShrink: 0 // Prevent this section from shrinking
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Avatar 
+            src={user?.profile_picture}
             sx={{ 
               bgcolor: '#b8862b', 
               width: 40, 
@@ -167,7 +176,7 @@ export default function Sidebar({ onNavigate }) {
               fontWeight: 600
             }}
           >
-            JD
+            {user?.username?.[0]?.toUpperCase() || 'U'}
           </Avatar>
           <Box sx={{ flex: 1 }}>
             <Typography 
@@ -177,7 +186,7 @@ export default function Sidebar({ onNavigate }) {
                 fontWeight: 600
               }}
             >
-              John Doe
+              {user?.username || 'User'}
             </Typography>
             <Typography 
               variant="caption" 
@@ -185,9 +194,23 @@ export default function Sidebar({ onNavigate }) {
                 color: '#666'
               }}
             >
-              Level: Intermediate
+              Level: {user?.profile?.level || 'Beginner'}
             </Typography>
           </Box>
+          <IconButton
+            onClick={handleLogout}
+            size="small"
+            sx={{ 
+              color: '#666',
+              '&:hover': { 
+                color: '#333',
+                bgcolor: '#f5f5f5' 
+              }
+            }}
+            title="Logout"
+          >
+            <LogoutIcon fontSize="small" />
+          </IconButton>
         </Box>
       </Box>
     </Box>
