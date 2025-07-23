@@ -37,7 +37,7 @@ export default function AITutor() {
           marginRight: '280px' // Account for right sidebar width
         }}
       >
-        <Container maxWidth="md" sx={{ display: 'flex', p: 0 }}>
+        <Box sx={{ width: '100%', display: 'flex', px: 2 }}>
           <Paper
             elevation={1}
             sx={{
@@ -55,7 +55,7 @@ export default function AITutor() {
               onNewSessionCreated={handleNewSessionCreated}
             />
           </Paper>
-        </Container>
+        </Box>
       </Box>
 
       {/* Right Sidebar for Chat History */}
