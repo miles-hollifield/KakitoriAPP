@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -6,10 +6,16 @@ import {
   ListItem, 
   ListItemText, 
   IconButton, 
-  Divider,
   Button,
   Menu,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { 
   Add as AddIcon,
@@ -18,19 +24,60 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon
 } from '@mui/icons-material';
+import { chatAPI } from '../features/ai-tutor/services/chatApiService';
 
-const mockChatHistory = [
-  { id: 1, title: 'Grammar Help - Te-form', timestamp: '2 hours ago', isActive: true },
-  { id: 2, title: 'Kanji Practice Session', timestamp: 'Yesterday', isActive: false },
-  { id: 3, title: 'Vocabulary Review', timestamp: '3 days ago', isActive: false },
-  { id: 4, title: 'Sentence Structure Help', timestamp: '1 week ago', isActive: false },
-  { id: 5, title: 'Hiragana Practice', timestamp: '1 week ago', isActive: false },
-];
-
-export default function ChatSidebar() {
+export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedChatId, setSelectedChatId] = useState(null);
-  const [chatHistory, setChatHistory] = useState(mockChatHistory);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+
+  // Load chat sessions on component mount
+  useEffect(() => {
+    loadChatSessions();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadChatSessions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const sessions = await chatAPI.getChatSessions();
+      
+      // Transform API response to match our component structure
+      const transformedSessions = sessions.map(session => ({
+        id: session.id,
+        title: session.title,
+        timestamp: formatTimestamp(session.updated_at),
+        isActive: session.id === activeSessionId,
+        messageCount: session.message_count,
+        lastMessagePreview: session.last_message_preview
+      }));
+      
+      setChatHistory(transformedSessions);
+    } catch (err) {
+      console.error('Failed to load chat sessions:', err);
+      setError('Failed to load chat history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+  };
 
   const handleMenuOpen = (event, chatId) => {
     event.stopPropagation();
@@ -43,19 +90,33 @@ export default function ChatSidebar() {
     setSelectedChatId(null);
   };
 
-  const handleNewChat = () => {
-    const newChat = {
-      id: Date.now(),
-      title: 'New Chat',
-      timestamp: 'Just now',
-      isActive: false
-    };
-    
-    // Deactivate all other chats and add new one
-    setChatHistory(prev => [
-      { ...newChat, isActive: true },
-      ...prev.map(chat => ({ ...chat, isActive: false }))
-    ]);
+  const handleNewChat = async () => {
+    try {
+      const newSession = await chatAPI.createChatSession();
+      
+      // Add new session to the list and make it active
+      const newChatItem = {
+        id: newSession.id,
+        title: newSession.title,
+        timestamp: 'Just now',
+        isActive: true,
+        messageCount: 0,
+        lastMessagePreview: null
+      };
+
+      setChatHistory(prev => [
+        newChatItem,
+        ...prev.map(chat => ({ ...chat, isActive: false }))
+      ]);
+      
+      // Notify parent component of session selection
+      if (onSessionSelect) {
+        onSessionSelect(newSession.id);
+      }
+    } catch (err) {
+      console.error('Failed to create new chat:', err);
+      setError('Failed to create new chat');
+    }
   };
 
   const handleChatSelect = (chatId) => {
@@ -65,17 +126,57 @@ export default function ChatSidebar() {
         isActive: chat.id === chatId 
       }))
     );
+    
+    if (onSessionSelect) {
+      onSessionSelect(chatId);
+    }
   };
 
-  const handleDeleteChat = () => {
-    setChatHistory(prev => prev.filter(chat => chat.id !== selectedChatId));
+  const handleDeleteChat = async () => {
+    try {
+      await chatAPI.deleteChatSession(selectedChatId);
+      setChatHistory(prev => prev.filter(chat => chat.id !== selectedChatId));
+      
+      // If we deleted the active session, select the first remaining session
+      const remainingSessions = chatHistory.filter(chat => chat.id !== selectedChatId);
+      if (remainingSessions.length > 0 && chatHistory.find(chat => chat.id === selectedChatId)?.isActive) {
+        handleChatSelect(remainingSessions[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to delete chat:', err);
+      setError('Failed to delete chat');
+    }
     handleMenuClose();
   };
 
   const handleRenameChat = () => {
-    // This would open a rename dialog in a real implementation
-    console.log('Rename chat:', selectedChatId);
+    const selectedChat = chatHistory.find(chat => chat.id === selectedChatId);
+    setNewTitle(selectedChat?.title || '');
+    setRenameDialogOpen(true);
     handleMenuClose();
+  };
+
+  const handleRenameConfirm = async () => {
+    try {
+      await chatAPI.updateChatSession(selectedChatId, newTitle);
+      setChatHistory(prev => 
+        prev.map(chat => 
+          chat.id === selectedChatId 
+            ? { ...chat, title: newTitle }
+            : chat
+        )
+      );
+      setRenameDialogOpen(false);
+      setNewTitle('');
+    } catch (err) {
+      console.error('Failed to rename chat:', err);
+      setError('Failed to rename chat');
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenameDialogOpen(false);
+    setNewTitle('');
   };
 
   return (
@@ -145,64 +246,91 @@ export default function ChatSidebar() {
           background: '#4caf50',
         },
       }}>
-        <List sx={{ p: 2 }}>
-          {chatHistory.map((chat) => (
-            <ListItem 
-              key={chat.id}
-              onClick={() => handleChatSelect(chat.id)}
-              sx={{ 
-                py: 1.5,
-                px: 2,
-                mb: 1,
-                borderRadius: 2,
-                bgcolor: chat.isActive ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
-                borderLeft: chat.isActive ? '3px solid #4caf50' : '3px solid transparent',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: chat.isActive ? 'rgba(76, 175, 80, 0.15)' : 'rgba(0, 0, 0, 0.04)',
-                },
-                transition: 'all 0.2s ease-in-out',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between'
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
-                <ChatIcon 
-                  sx={{ 
-                    color: chat.isActive ? '#4caf50' : '#666',
-                    fontSize: 20,
-                    mt: 0.25
-                  }} 
-                />
-                <ListItemText
-                  primary={chat.title}
-                  secondary={chat.timestamp}
-                  primaryTypographyProps={{ 
-                    fontSize: 14,
-                    fontWeight: chat.isActive ? 600 : 400,
-                    color: chat.isActive ? '#4caf50' : '#333',
-                    noWrap: true
-                  }}
-                  secondaryTypographyProps={{
-                    fontSize: 12,
-                    color: '#666'
-                  }}
-                />
+        {error && (
+          <Alert severity="error" sx={{ m: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : (
+          <List sx={{ p: 2 }}>
+            {chatHistory.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4, color: '#666' }}>
+                <Typography variant="body2">
+                  No chat history yet. Start a new conversation!
+                </Typography>
               </Box>
-              <IconButton
-                size="small"
-                onClick={(e) => handleMenuOpen(e, chat.id)}
-                sx={{ 
-                  opacity: 0.7,
-                  '&:hover': { opacity: 1 }
-                }}
-              >
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
+            ) : (
+              chatHistory.map((chat) => (
+                <ListItem 
+                  key={chat.id}
+                  onClick={() => handleChatSelect(chat.id)}
+                  sx={{ 
+                    py: 1.5,
+                    px: 2,
+                    mb: 1,
+                    borderRadius: 2,
+                    bgcolor: chat.isActive ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                    borderLeft: chat.isActive ? '3px solid #4caf50' : '3px solid transparent',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: chat.isActive ? 'rgba(76, 175, 80, 0.15)' : 'rgba(0, 0, 0, 0.04)',
+                    },
+                    transition: 'all 0.2s ease-in-out',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
+                    <ChatIcon 
+                      sx={{ 
+                        color: chat.isActive ? '#4caf50' : '#666',
+                        fontSize: 20,
+                        mt: 0.25
+                      }} 
+                    />
+                    <ListItemText
+                      primary={chat.title}
+                      secondary={
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            {chat.timestamp}
+                          </Typography>
+                          {chat.messageCount > 0 && (
+                            <Typography variant="caption" sx={{ ml: 1, color: '#666' }}>
+                              • {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                      primaryTypographyProps={{ 
+                        fontSize: 14,
+                        fontWeight: chat.isActive ? 600 : 400,
+                        color: chat.isActive ? '#4caf50' : '#333',
+                        noWrap: true
+                      }}
+                    />
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleMenuOpen(e, chat.id)}
+                    sx={{ 
+                      opacity: 0.7,
+                      '&:hover': { opacity: 1 }
+                    }}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                </ListItem>
+              ))
+            )}
+          </List>
+        )}
       </Box>
 
       {/* Menu for chat actions */}
@@ -226,6 +354,29 @@ export default function ChatSidebar() {
           Delete
         </MenuItem>
       </Menu>
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onClose={handleRenameCancel} maxWidth="sm" fullWidth>
+        <DialogTitle>Rename Chat</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Chat Title"
+            fullWidth
+            variant="outlined"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRenameCancel}>Cancel</Button>
+          <Button onClick={handleRenameConfirm} variant="contained">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

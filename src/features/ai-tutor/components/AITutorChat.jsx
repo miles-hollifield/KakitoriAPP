@@ -12,16 +12,16 @@ import { Refresh, SmartToy } from '@mui/icons-material';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import TypingIndicator from './TypingIndicator';
-import AITutorService from '../services/apiService';
+import { chatAPI } from '../services/chatApiService';
 
 /**
  * Main AI Tutor chat interface component
  */
-export default function AITutorChat() {
+export default function AITutorChat({ activeSessionId, onNewSessionCreated }) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isServiceAvailable, setIsServiceAvailable] = useState(true);
+  const [loadingSession, setLoadingSession] = useState(false);
   const chatEndRef = useRef(null);
 
   // Suggested starter questions
@@ -38,22 +38,37 @@ export default function AITutorChat() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Check service health on component mount
+  // Load session messages when activeSessionId changes
   useEffect(() => {
-    checkServiceHealth();
-  }, []);
+    if (activeSessionId) {
+      loadSessionMessages(activeSessionId);
+    } else {
+      setMessages([]);
+    }
+  }, [activeSessionId]);
 
-  const checkServiceHealth = async () => {
+  const loadSessionMessages = async (sessionId) => {
+    if (!sessionId) return;
+    
     try {
-      const health = await AITutorService.checkHealth();
-      setIsServiceAvailable(health.available);
-      if (!health.available) {
-        setError('AI Tutor service is currently unavailable. Please try again later.');
-      }
+      setLoadingSession(true);
+      setError(null);
+      const session = await chatAPI.getChatSession(sessionId);
+      
+      // Transform API messages to component format
+      const transformedMessages = session.messages.map(msg => ({
+        id: msg.id,
+        text: msg.content,
+        isUser: msg.role === 'user',
+        timestamp: new Date(msg.created_at).toLocaleTimeString()
+      }));
+      
+      setMessages(transformedMessages);
     } catch (err) {
-      setIsServiceAvailable(false);
-      setError('Unable to connect to the AI Tutor service.');
-      console.error('Service health check failed:', err);
+      console.error('Failed to load session messages:', err);
+      setError('Failed to load chat history');
+    } finally {
+      setLoadingSession(false);
     }
   };
 
@@ -63,9 +78,9 @@ export default function AITutorChat() {
     // Clear any previous errors
     setError(null);
 
-    // Add user message
+    // Add user message optimistically
     const userMessage = {
-      id: Date.now(),
+      id: `temp-${Date.now()}`,
       text: messageText,
       isUser: true,
       timestamp: new Date().toLocaleTimeString()
@@ -75,19 +90,38 @@ export default function AITutorChat() {
     setIsLoading(true);
 
     try {
-      const response = await AITutorService.sendMessage(messageText);
+      const response = await chatAPI.sendMessage(messageText, activeSessionId);
       
-      // Add AI response
+      // Replace the optimistic user message and add AI response
+      const actualUserMessage = {
+        id: `user-${Date.now()}`,
+        text: messageText,
+        isUser: true,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      
       const aiMessage = {
-        id: Date.now() + 1,
+        id: `ai-${Date.now()}`,
         text: response.response,
         isUser: false,
         timestamp: new Date().toLocaleTimeString()
       };
       
-      setMessages(prev => [...prev, aiMessage]);
+      // If this was a new session (no activeSessionId), we'll get one back
+      // Notify parent component of new session
+      if (!activeSessionId && onNewSessionCreated) {
+        onNewSessionCreated(response.session_id);
+      }
+      
+      setMessages(prev => [
+        ...prev.slice(0, -1), // Remove optimistic message
+        actualUserMessage,
+        aiMessage
+      ]);
     } catch (error) {
-      setError(error.message);
+      // Remove the optimistic message on error
+      setMessages(prev => prev.slice(0, -1));
+      setError(error.message || 'Failed to send message');
       console.error('Chat error:', error);
     } finally {
       setIsLoading(false);
@@ -100,36 +134,12 @@ export default function AITutorChat() {
 
   const handleRetry = () => {
     setError(null);
-    checkServiceHealth();
   };
-
-  if (!isServiceAvailable) {
-    return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 2 }}
-          action={
-            <Button 
-              color="inherit" 
-              size="small" 
-              onClick={handleRetry}
-              startIcon={<Refresh />}
-            >
-              Retry
-            </Button>
-          }
-        >
-          AI Tutor service is currently unavailable. Please check that the backend service is running.
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Welcome Message */}
-      {messages.length === 0 && (
+      {messages.length === 0 && !loadingSession && (
         <Fade in timeout={800}>
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <SmartToy sx={{ fontSize: 48, color: '#4caf50', mb: 2 }} />
@@ -170,14 +180,22 @@ export default function AITutorChat() {
           minHeight: 0 // Important for flex scrolling
         }}
       >
-        {messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            message={message.text}
-            isUser={message.isUser}
-            timestamp={message.timestamp}
-          />
-        ))}
+        {loadingSession ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              Loading chat history...
+            </Typography>
+          </Box>
+        ) : (
+          messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message.text}
+              isUser={message.isUser}
+              timestamp={message.timestamp}
+            />
+          ))
+        )}
         
         {/* Typing Indicator */}
         {isLoading && <TypingIndicator />}
@@ -189,6 +207,16 @@ export default function AITutorChat() {
               severity="error" 
               onClose={() => setError(null)}
               sx={{ borderRadius: 2 }}
+              action={
+                <Button 
+                  color="inherit" 
+                  size="small" 
+                  onClick={handleRetry}
+                  startIcon={<Refresh />}
+                >
+                  Retry
+                </Button>
+              }
             >
               {error}
             </Alert>
@@ -202,8 +230,8 @@ export default function AITutorChat() {
       <Box sx={{ p: 2, pt: 1 }}>
         <ChatInput
           onSendMessage={handleSendMessage}
-          disabled={!isServiceAvailable}
-          placeholder="Ask me anything about Japanese..."
+          disabled={isLoading}
+          placeholder={activeSessionId ? "Continue the conversation..." : "Start a new conversation..."}
         />
       </Box>
     </Box>

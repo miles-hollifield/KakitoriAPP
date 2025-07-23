@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Container, Paper } from '@mui/material';
 import { AITutorChat } from '../features/ai-tutor';
 import ChatSidebar from '../components/ChatSidebar';
@@ -7,6 +7,15 @@ import ChatSidebar from '../components/ChatSidebar';
  * AI Tutor page - Interactive chat with AI Japanese language tutor
  */
 export default function AITutor() {
+  const [activeSessionId, setActiveSessionId] = useState(null);
+
+  const handleSessionSelect = (sessionId) => {
+    setActiveSessionId(sessionId);
+  };
+
+  const handleNewSessionCreated = (sessionId) => {
+    setActiveSessionId(sessionId);
+  };
   return (
     <Box
       sx={{
@@ -38,13 +47,19 @@ export default function AITutor() {
               overflow: 'hidden'
             }}
           >
-            <AITutorChat />
+            <AITutorChat 
+              activeSessionId={activeSessionId} 
+              onNewSessionCreated={handleNewSessionCreated}
+            />
           </Paper>
         </Container>
       </Box>
 
       {/* Right Sidebar for Chat History */}
-      <ChatSidebar />
+      <ChatSidebar 
+        activeSessionId={activeSessionId}
+        onSessionSelect={handleSessionSelect}
+      />
     </Box>
   );
 }
