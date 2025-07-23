@@ -293,7 +293,11 @@ function AppLayout() {
               <Route path="/lessons" element={<Lessons />} />
               <Route path="/jlpt-practice" element={<JLPTPractice />} />
               <Route path="/review" element={<Review />} />
-              <Route path="/ai-tutor" element={<AITutor />} />
+              <Route path="/ai-tutor" element={
+                <ProtectedRoute>
+                  <AITutor />
+                </ProtectedRoute>
+              } />
               <Route path="/dialog" element={<Dialog />} />
               <Route path="/community" element={<Community />} />
               <Route path="/profile" element={<Profile />} />
