@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Box, useMediaQuery, Drawer, ThemeProvider, createTheme, CssBaseline, Typography } from '@mui/material';
+import { Box, Drawer, ThemeProvider, createTheme, CssBaseline, Typography } from '@mui/material';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Kanji from './pages/Kanji';
@@ -15,7 +15,7 @@ import AITutor from './pages/AITutor';
 import Dialog from './pages/Dialog';
 import Community from './pages/Community';
 import Profile from './pages/Profile';
-import Analytics from './pages/Analytics'; // Add this import
+import Analytics from './pages/Analytics';
 import './App.css';
 
 // Create a modern theme with original colors

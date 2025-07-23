@@ -14,11 +14,7 @@ import {
   Pagination
 } from '@mui/material';
 import { Search, ViewModule, ViewList } from '@mui/icons-material';
-import { fetchKanji } from '../services/kanjiService';
-
-// Import our existing components
-import KanjiCatalog from '../features/kanji/KanjiCatalog';
-import KanjiDetailDrawer from '../features/kanji/KanjiDetailDrawer';
+import { fetchKanji, KanjiCatalog, KanjiDetailDrawer } from '../features/kanji';
 
 export default function Kanji() {
   const [searchTerm, setSearchTerm] = useState('');
