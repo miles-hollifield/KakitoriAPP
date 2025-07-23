@@ -45,7 +45,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Authentication failed');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Authentication failed');
       }
 
       const data = await response.json();

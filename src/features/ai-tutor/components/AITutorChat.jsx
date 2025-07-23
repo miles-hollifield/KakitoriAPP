@@ -108,8 +108,8 @@ export default function AITutorChat({ activeSessionId, onNewSessionCreated }) {
       };
       
       // If this was a new session (no activeSessionId), we'll get one back
-      // Notify parent component of new session
-      if (!activeSessionId && onNewSessionCreated) {
+      // Or if session title was updated, notify parent to refresh sidebar
+      if ((!activeSessionId || response.session_title) && onNewSessionCreated) {
         onNewSessionCreated(response.session_id);
       }
       

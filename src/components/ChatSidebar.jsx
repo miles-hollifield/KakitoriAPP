@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { chatAPI } from '../features/ai-tutor/services/chatApiService';
 
-export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
+export default function ChatSidebar({ activeSessionId, onSessionSelect, refreshTrigger }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
@@ -35,10 +35,10 @@ export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
-  // Load chat sessions on component mount
+  // Load chat sessions on component mount and when refreshTrigger changes
   useEffect(() => {
     loadChatSessions();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadChatSessions = async () => {
     try {
@@ -49,7 +49,7 @@ export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
       // Transform API response to match our component structure
       const transformedSessions = sessions.map(session => ({
         id: session.id,
-        title: session.title,
+        title: session.title.length > 20 ? session.title.substring(0, 20) + '...' : session.title,
         timestamp: formatTimestamp(session.updated_at),
         isActive: session.id === activeSessionId,
         messageCount: session.message_count,
@@ -297,16 +297,16 @@ export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
                     <ListItemText
                       primary={chat.title}
                       secondary={
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
+                        <>
+                          <Typography variant="caption" color="text.secondary" component="span">
                             {chat.timestamp}
                           </Typography>
                           {chat.messageCount > 0 && (
-                            <Typography variant="caption" sx={{ ml: 1, color: '#666' }}>
+                            <Typography variant="caption" sx={{ ml: 1, color: '#666' }} component="span">
                               • {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
                             </Typography>
                           )}
-                        </Box>
+                        </>
                       }
                       primaryTypographyProps={{ 
                         fontSize: 14,
