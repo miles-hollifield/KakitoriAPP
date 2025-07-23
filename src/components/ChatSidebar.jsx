@@ -297,16 +297,16 @@ export default function ChatSidebar({ activeSessionId, onSessionSelect }) {
                     <ListItemText
                       primary={chat.title}
                       secondary={
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
+                        <>
+                          <Typography variant="caption" color="text.secondary" component="span">
                             {chat.timestamp}
                           </Typography>
                           {chat.messageCount > 0 && (
-                            <Typography variant="caption" sx={{ ml: 1, color: '#666' }}>
+                            <Typography variant="caption" sx={{ ml: 1, color: '#666' }} component="span">
                               • {chat.messageCount} message{chat.messageCount !== 1 ? 's' : ''}
                             </Typography>
                           )}
-                        </Box>
+                        </>
                       }
                       primaryTypographyProps={{ 
                         fontSize: 14,

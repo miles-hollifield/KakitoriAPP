@@ -56,6 +56,21 @@ export const chatAPI = {
   },
 
   /**
+   * Create a new chat session
+   * @param {string} title - Optional title for the session
+   * @returns {Promise<{id: string, title: string, created_at: string, updated_at: string}>}
+   */
+  async createChatSession(title = "New Chat") {
+    try {
+      const response = await api.post('/ai-tutor/sessions', { title });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to create chat session:', error);
+      throw new Error('Failed to create new chat session');
+    }
+  },
+
+  /**
    * Get a specific chat session with messages
    * @param {string} sessionId - The session ID
    * @returns {Promise<{id: string, title: string, messages: Array}>}
@@ -82,6 +97,15 @@ export const chatAPI = {
       console.error('Failed to delete chat session:', error);
       throw new Error('Failed to delete chat session');
     }
+  },
+
+  /**
+   * Delete a chat session (alias for deleteSession)
+   * @param {string} sessionId - The session ID to delete
+   * @returns {Promise<void>}
+   */
+  async deleteChatSession(sessionId) {
+    return this.deleteSession(sessionId);
   },
 
   /**
