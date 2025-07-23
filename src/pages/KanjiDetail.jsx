@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import KanjiInformationPanel from '../features/kanji/KanjiInformationPanel';
+import { KanjiInformationPanel } from '../features/kanji';
 import { Box, Container, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';

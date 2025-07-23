@@ -18,7 +18,7 @@ import AITutor from './pages/AITutor';
 import Dialog from './pages/Dialog';
 import Community from './pages/Community';
 import Profile from './pages/Profile';
-import Analytics from './pages/Analytics'; // Add this import
+import Analytics from './pages/Analytics';
 import './App.css';
 
 // Create a modern theme with original colors

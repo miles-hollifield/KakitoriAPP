@@ -13,8 +13,6 @@ export default function KanjiCatalog({
   currentPage,
   itemsPerPage, 
   onPageChange,
-  searchTerm,
-  jlptFilter,
   onToggleFavorite,
   viewMode = 'cards',
   onKanjiSelect,
