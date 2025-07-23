@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 import { Search, ViewModule, ViewList } from '@mui/icons-material';
 import { fetchKanji, KanjiCatalog, KanjiDetailDrawer } from '../features/kanji';
+import { useFavorites } from '../hooks/useFavorites';
+import { useAuth } from '../contexts/useAuth';
 
 export default function Kanji() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,14 +31,32 @@ export default function Kanji() {
   const [selectedKanji, setSelectedKanji] = useState(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   
+  // Authentication and favorites hooks
+  const { isAuthenticated } = useAuth();
+  const { toggleKanjiFavorite, isKanjiFavorited } = useFavorites();
+  
   const itemsPerPage = 20;
 
-  const toggleFavorite = (kanjiId) => {
-    setKanjiList(prev => prev.map(kanji => (
-      kanji.id === kanjiId
-        ? { ...kanji, isFavorite: !kanji.isFavorite }
-        : kanji
-    )));
+  const toggleFavorite = async (kanjiId) => {
+    if (!isAuthenticated) {
+      // Could show a toast or modal here
+      console.log('Please log in to save favorites');
+      return;
+    }
+
+    try {
+      await toggleKanjiFavorite(kanjiId);
+      
+      // Update local kanji list to reflect the change
+      setKanjiList(prev => prev.map(kanji => (
+        kanji.id === kanjiId
+          ? { ...kanji, is_favorite: isKanjiFavorited(kanjiId) }
+          : kanji
+      )));
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      // Could show error toast here
+    }
   };
 
   const handleKanjiSelect = (kanji) => {
@@ -61,7 +81,14 @@ export default function Kanji() {
     })
       .then(data => {
         console.log('API Response:', data); // Debug log
-        setKanjiList(data.items || []);
+        
+        // Add favorite status to each kanji item
+        const kanjiWithFavorites = (data.items || []).map(kanji => ({
+          ...kanji,
+          is_favorite: isAuthenticated ? isKanjiFavorited(kanji.id) : false
+        }));
+        
+        setKanjiList(kanjiWithFavorites);
         setTotalKanji(data.total || 0);
         setTotalPages(data.pages || 1); // Use pages from API response
       })
@@ -70,7 +97,7 @@ export default function Kanji() {
         setError('Failed to load kanji data');
       })
       .finally(() => setLoading(false));
-  }, [searchTerm, jlptFilter, currentPage]);
+  }, [searchTerm, jlptFilter, currentPage, isAuthenticated, isKanjiFavorited]);
 
   // Reset to page 1 when search changes
   useEffect(() => {
