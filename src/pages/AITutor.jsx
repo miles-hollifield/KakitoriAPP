@@ -8,6 +8,7 @@ import ChatSidebar from '../components/ChatSidebar';
  */
 export default function AITutor() {
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Trigger sidebar refresh
 
   const handleSessionSelect = (sessionId) => {
     setActiveSessionId(sessionId);
@@ -15,6 +16,8 @@ export default function AITutor() {
 
   const handleNewSessionCreated = (sessionId) => {
     setActiveSessionId(sessionId);
+    // Always trigger sidebar refresh when a session is created or updated
+    setRefreshTrigger(prev => prev + 1);
   };
   return (
     <Box
@@ -59,6 +62,7 @@ export default function AITutor() {
       <ChatSidebar 
         activeSessionId={activeSessionId}
         onSessionSelect={handleSessionSelect}
+        refreshTrigger={refreshTrigger}
       />
     </Box>
   );
