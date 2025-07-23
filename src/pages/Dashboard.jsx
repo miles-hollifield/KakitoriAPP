@@ -53,7 +53,7 @@ export default function Dashboard() {
             color: '#666'
           }}
         >
-          Welcome back, John! Ready to continue your Japanese learning journey?
+          Ready to continue your Japanese learning journey?
         </Typography>
       </Box>
 

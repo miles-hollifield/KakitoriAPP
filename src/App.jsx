@@ -2,8 +2,11 @@ import { useState } from 'react';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Box, Drawer, ThemeProvider, createTheme, CssBaseline, Typography } from '@mui/material';
+import AuthProvider from './contexts/AuthProvider';
+import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 import Kanji from './pages/Kanji';
 import KanjiDetail from './pages/KanjiDetail';
 import Vocab from './pages/Vocab';
@@ -96,7 +99,7 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
@@ -120,6 +123,29 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Routes>
+            {/* Public route */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected routes */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
+  );
+}
+
+function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Create theme first, then use it for breakpoint detection
@@ -144,143 +170,139 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
+    <Box sx={{ 
+      display: 'flex', 
+      bgcolor: '#fafafa', 
+      minHeight: '100vh',
+      width: '100%',
+      margin: 0,
+      padding: 0,
+      boxSizing: 'border-box'
+    }}>
+      {/* Desktop Sidebar */}
+      {!isMobile && (
         <Box sx={{ 
-          display: 'flex', 
-          bgcolor: '#fafafa', 
-          minHeight: '100vh',
-          width: '100%',
-          margin: 0,
-          padding: 0,
-          boxSizing: 'border-box'
+          width: 280, 
+          flexShrink: 0 // Prevent sidebar from shrinking
         }}>
-          {/* Desktop Sidebar */}
-          {!isMobile && (
-            <Box sx={{ 
+          <Sidebar onNavigate={handleSidebarNavigate} />
+        </Box>
+      )}
+
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          variant="temporary"
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            '& .MuiDrawer-paper': { 
               width: 280, 
-              flexShrink: 0 // Prevent sidebar from shrinking
-            }}>
-              <Sidebar onNavigate={handleSidebarNavigate} />
-            </Box>
-          )}
+              boxSizing: 'border-box',
+              bgcolor: '#ffffff'
+            },
+            zIndex: 1300
+          }}
+        >
+          <Sidebar onNavigate={handleSidebarNavigate} />
+        </Drawer>
+      )}
 
-          {/* Mobile Drawer */}
-          {isMobile && (
-            <Drawer
-              open={drawerOpen}
-              onClose={() => setDrawerOpen(false)}
-              variant="temporary"
-              ModalProps={{ keepMounted: true }}
-              sx={{
-                '& .MuiDrawer-paper': { 
-                  width: 280, 
-                  boxSizing: 'border-box',
-                  bgcolor: '#ffffff'
-                },
-                zIndex: 1300
-              }}
-            >
-              <Sidebar onNavigate={handleSidebarNavigate} />
-            </Drawer>
-          )}
-
-          {/* Main Content Area - This should now stretch to full width */}
+      {/* Main Content Area - This should now stretch to full width */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1, // Take up remaining space
+          bgcolor: '#fafafa',
+          minHeight: '100vh',
+          position: 'relative',
+          overflow: 'auto',
+          // Remove all margins and padding
+          m: 0,
+          p: 0
+        }}
+      >
+        {/* Top Header Bar for Mobile */}
+        {isMobile && (
           <Box
-            component="main"
             sx={{
-              flexGrow: 1, // Take up remaining space
-              bgcolor: '#fafafa',
-              minHeight: '100vh',
-              position: 'relative',
-              overflow: 'auto',
-              // Remove all margins and padding
-              m: 0,
-              p: 0
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              p: 2,
+              bgcolor: '#fff',
+              borderBottom: '1px solid #e5e7eb',
+              position: 'sticky',
+              top: 0,
+              zIndex: 100,
+              width: '100%'
             }}
           >
-            {/* Top Header Bar for Mobile */}
-            {isMobile && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  p: 2,
-                  bgcolor: '#fff',
-                  borderBottom: '1px solid #e5e7eb',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 100,
-                  width: '100%'
-                }}
-              >
-                <Box 
-                  onClick={() => setDrawerOpen(true)}
-                  sx={{ 
-                    cursor: 'pointer',
-                    p: 1,
-                    borderRadius: 2,
-                    '&:hover': { bgcolor: '#f3f4f6' }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
-                    <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
-                    <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
-                  </Box>
-                </Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontFamily: 'serif', 
-                    color: '#b8862b', 
-                    fontWeight: 700,
-                    letterSpacing: 2
-                  }}
-                >
-                  Kakitori
-                </Typography>
-                <Box sx={{ width: 40 }} /> {/* Spacer for centering */}
+            <Box 
+              onClick={() => setDrawerOpen(true)}
+              sx={{ 
+                cursor: 'pointer',
+                p: 1,
+                borderRadius: 2,
+                '&:hover': { bgcolor: '#f3f4f6' }
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
+                <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
+                <Box sx={{ width: 20, height: 2, bgcolor: '#374151', borderRadius: 1 }} />
               </Box>
-            )}
-
-            {/* Page Content - Remove all constraints */}
-            <Box sx={{ 
-              width: '100%', // Full width
-              minHeight: '100%',
-              margin: 0,
-              padding: 0,
-              boxSizing: 'border-box',
-              '& > *': { // Target all children
-                margin: 0,
-                padding: 0,
-                width: '100%'
-              }
-            }}>
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/kanji" element={<Kanji />} />
-                  <Route path="/kanji/:kanjiId" element={<KanjiDetail />} />
-                  <Route path="/vocab" element={<Vocab />} />
-                  <Route path="/kana" element={<Kana />} />
-                  <Route path="/lessons" element={<Lessons />} />
-                  <Route path="/jlpt-practice" element={<JLPTPractice />} />
-                  <Route path="/review" element={<Review />} />
-                  <Route path="/ai-tutor" element={<AITutor />} />
-                  <Route path="/dialog" element={<Dialog />} />
-                  <Route path="/community" element={<Community />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                </Routes>
-              </ErrorBoundary>
             </Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: 'serif', 
+                color: '#b8862b', 
+                fontWeight: 700,
+                letterSpacing: 2
+              }}
+            >
+              Kakitori
+            </Typography>
+            <Box sx={{ width: 40 }} /> {/* Spacer for centering */}
           </Box>
+        )}
+
+        {/* Page Content - Remove all constraints */}
+        <Box sx={{ 
+          width: '100%', // Full width
+          minHeight: '100%',
+          margin: 0,
+          padding: 0,
+          boxSizing: 'border-box',
+          '& > *': { // Target all children
+            margin: 0,
+            padding: 0,
+            width: '100%'
+          }
+        }}>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/kanji" element={<Kanji />} />
+              <Route path="/kanji/:kanjiId" element={<KanjiDetail />} />
+              <Route path="/vocab" element={<Vocab />} />
+              <Route path="/kana" element={<Kana />} />
+              <Route path="/lessons" element={<Lessons />} />
+              <Route path="/jlpt-practice" element={<JLPTPractice />} />
+              <Route path="/review" element={<Review />} />
+              <Route path="/ai-tutor" element={<AITutor />} />
+              <Route path="/dialog" element={<Dialog />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/analytics" element={<Analytics />} />
+            </Routes>
+          </ErrorBoundary>
         </Box>
-      </Router>
-    </ThemeProvider>
+      </Box>
+    </Box>
   );
 }
 
