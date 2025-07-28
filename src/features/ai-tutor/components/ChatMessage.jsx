@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, Avatar } from '@mui/material';
 import { Person, SmartToy } from '@mui/icons-material';
+import { useAuth } from '../../../contexts/useAuth';
 
 /**
  * Individual chat message component
@@ -10,6 +11,7 @@ import { Person, SmartToy } from '@mui/icons-material';
  * @param {string} props.timestamp - Message timestamp
  */
 export default function ChatMessage({ message, isUser, timestamp }) {
+  const { user } = useAuth();
   return (
     <Box
       sx={{
@@ -23,13 +25,14 @@ export default function ChatMessage({ message, isUser, timestamp }) {
         sx={{
           display: 'flex',
           alignItems: 'flex-start',
-          maxWidth: '70%',
+          maxWidth: isUser ? '70%' : '100%',
           flexDirection: isUser ? 'row-reverse' : 'row',
           gap: 1
         }}
       >
         {/* Avatar */}
         <Avatar
+          src={isUser ? user?.profile_picture : '/images/ai-avatar.png'}
           sx={{
             bgcolor: isUser ? '#b8862b' : '#4caf50',
             width: 32,

@@ -31,8 +31,8 @@ export default function AITutor() {
       <Box 
         sx={{ 
           flex: 1, 
-          display: 'flex', 
-          p: 2, 
+          display: 'flex',
+          p: 2,
           minHeight: 0,
           marginRight: '280px' // Account for right sidebar width
         }}
@@ -46,7 +46,7 @@ export default function AITutor() {
               display: 'flex',
               flexDirection: 'column',
               bgcolor: '#ffffff',
-              borderRadius: 3,
+              borderRadius: 1,
               overflow: 'hidden'
             }}
           >

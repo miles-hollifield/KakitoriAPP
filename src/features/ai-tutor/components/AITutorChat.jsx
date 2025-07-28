@@ -141,31 +141,49 @@ export default function AITutorChat({ activeSessionId, onNewSessionCreated }) {
       {/* Welcome Message */}
       {messages.length === 0 && !loadingSession && (
         <Fade in timeout={800}>
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <SmartToy sx={{ fontSize: 48, color: '#4caf50', mb: 2 }} />
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-              Welcome to your AI Japanese Tutor!
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              I'm here to help you learn Japanese. Ask me questions about grammar, vocabulary, pronunciation, or culture!
-            </Typography>
-            
-            {/* Starter Questions */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mb: 2 }}>
-              {starterQuestions.map((question, index) => (
-                <Chip
-                  key={index}
-                  label={question}
-                  onClick={() => handleStarterQuestion(question)}
-                  variant="outlined"
-                  sx={{
-                    cursor: 'pointer',
-                    '&:hover': {
-                      bgcolor: '#f3f4f6'
-                    }
-                  }}
-                />
-              ))}
+          <Box 
+            sx={{ 
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              px: 3,
+              pt: 32 // Add bottom padding to push content up slightly from true center
+            }}
+          >
+            <Box sx={{ textAlign: 'center', maxWidth: '768px', width: '100%' }}>
+              <SmartToy sx={{ fontSize: 48, color: '#4caf50', mb: 2 }} />
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                Welcome to your AI Japanese Tutor!
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                I'm here to help you learn Japanese. Ask me questions about grammar, vocabulary, pronunciation, or culture!
+              </Typography>
+              
+              {/* Starter Questions */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mb: 4 }}>
+                {starterQuestions.map((question, index) => (
+                  <Chip
+                    key={index}
+                    label={question}
+                    onClick={() => handleStarterQuestion(question)}
+                    variant="outlined"
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: '#f3f4f6'
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+              
+              {/* Chat Input */}
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                disabled={isLoading}
+                placeholder={activeSessionId ? "Continue the conversation..." : "Start a new conversation..."}
+              />
             </Box>
           </Box>
         </Fade>
@@ -175,65 +193,102 @@ export default function AITutorChat({ activeSessionId, onNewSessionCreated }) {
       <Box 
         sx={{ 
           flex: 1, 
-          overflowY: 'auto', 
+          overflowY: 'auto',
           py: 2,
-          minHeight: 0 // Important for flex scrolling
+          minHeight: 0, // Important for flex scrolling
+          display: 'flex',
+          justifyContent: 'center',
+          // Custom scrollbar styling
+          '&::-webkit-scrollbar': {
+            width: '6px', // Made slightly thinner
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'transparent',
+            margin: '8px 0', // Add margin to make track shorter
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#c1c1c1',
+            borderRadius: '3px',
+            margin: '8px 0', // Add margin to make thumb shorter
+            '&:hover': {
+              background: '#a8a8a8',
+            },
+          },
+          '&::-webkit-scrollbar-thumb:active': {
+            background: '#8e8e8e',
+          },
+          // Add some right padding to move scrollbar slightly left
+          paddingRight: '4px',
+          // Firefox scrollbar styling
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#c1c1c1 transparent',
         }}
       >
-        {loadingSession ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              Loading chat history...
-            </Typography>
-          </Box>
-        ) : (
-          messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message.text}
-              isUser={message.isUser}
-              timestamp={message.timestamp}
+        <Box sx={{ width: '100%', maxWidth: '1000px', px: 2 }}>
+          {loadingSession ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Loading chat history...
+              </Typography>
+            </Box>
+          ) : (
+            messages.map((message) => (
+              <ChatMessage
+                key={message.id}
+                message={message.text}
+                isUser={message.isUser}
+                timestamp={message.timestamp}
+              />
+            ))
+          )}
+          
+          {/* Typing Indicator */}
+          {isLoading && <TypingIndicator />}
+          
+          {/* Error Message */}
+          {error && (
+            <Box sx={{ px: 1, mb: 2 }}>
+              <Alert 
+                severity="error" 
+                onClose={() => setError(null)}
+                sx={{ borderRadius: 2 }}
+                action={
+                  <Button 
+                    color="inherit" 
+                    size="small" 
+                    onClick={handleRetry}
+                    startIcon={<Refresh />}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                {error}
+              </Alert>
+            </Box>
+          )}
+          
+          <div ref={chatEndRef} />
+        </Box>
+      </Box>      {/* Chat Input - Only show when there are messages */}
+      {messages.length > 0 && (
+        <Box 
+          sx={{ 
+            display: 'flex',
+            justifyContent: 'center',
+            p: 2, 
+            pt: 1 
+          }}
+        >
+          <Box sx={{ maxWidth: '1000px', width: '100%', mt: 2}}>
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              disabled={isLoading}
+              placeholder={activeSessionId ? "Continue the conversation..." : "Start a new conversation..."}
             />
-          ))
-        )}
-        
-        {/* Typing Indicator */}
-        {isLoading && <TypingIndicator />}
-        
-        {/* Error Message */}
-        {error && (
-          <Box sx={{ px: 1, mb: 2 }}>
-            <Alert 
-              severity="error" 
-              onClose={() => setError(null)}
-              sx={{ borderRadius: 2 }}
-              action={
-                <Button 
-                  color="inherit" 
-                  size="small" 
-                  onClick={handleRetry}
-                  startIcon={<Refresh />}
-                >
-                  Retry
-                </Button>
-              }
-            >
-              {error}
-            </Alert>
           </Box>
-        )}
-        
-        <div ref={chatEndRef} />
-      </Box>
-
-      {/* Chat Input */}
-      <Box sx={{ p: 2, pt: 1 }}>
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          disabled={isLoading}
-          placeholder={activeSessionId ? "Continue the conversation..." : "Start a new conversation..."}
-        />
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 }
