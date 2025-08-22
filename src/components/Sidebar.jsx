@@ -21,13 +21,13 @@ const navItems = [
   { text: 'Kanji', path: '/kanji', icon: <TextFieldsIcon fontSize="small" /> },
   { text: 'Vocabulary', path: '/vocab', icon: <MenuBookIcon fontSize="small" /> },
   { text: 'Kana Practice', path: '/kana', icon: <TranslateIcon fontSize="small" /> },
-  { text: 'Lessons', path: '/lessons', icon: <SchoolIcon fontSize="small" /> },
-  { text: 'JLPT Practice', path: '/jlpt-practice', icon: <QuizIcon fontSize="small" /> },
-  { text: 'Review', path: '/review', icon: <RefreshIcon fontSize="small" /> },
   { text: 'AI Tutor', path: '/ai-tutor', icon: <SmartToyIcon fontSize="small" /> },
-  { text: 'Conversation', path: '/dialog', icon: <ChatIcon fontSize="small" /> },
-  { text: 'Community', path: '/community', icon: <PeopleIcon fontSize="small" /> },
-  { text: 'Analytics', path: '/analytics', icon: <AnalyticsIcon fontSize="small" /> },
+  // { text: 'Lessons', path: '/lessons', icon: <SchoolIcon fontSize="small" /> },
+  // { text: 'JLPT Practice', path: '/jlpt-practice', icon: <QuizIcon fontSize="small" /> },
+  // { text: 'Review', path: '/review', icon: <RefreshIcon fontSize="small" /> },
+  // { text: 'Conversation', path: '/dialog', icon: <ChatIcon fontSize="small" /> },
+  // { text: 'Community', path: '/community', icon: <PeopleIcon fontSize="small" /> },
+  // { text: 'Analytics', path: '/analytics', icon: <AnalyticsIcon fontSize="small" /> },
 ];
 
 const studyStats = [
