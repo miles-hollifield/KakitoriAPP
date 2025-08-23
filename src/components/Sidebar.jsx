@@ -25,7 +25,7 @@ const navItems = [
   // { text: 'Lessons', path: '/lessons', icon: <SchoolIcon fontSize="small" /> },
   // { text: 'JLPT Practice', path: '/jlpt-practice', icon: <QuizIcon fontSize="small" /> },
   // { text: 'Review', path: '/review', icon: <RefreshIcon fontSize="small" /> },
-  // { text: 'Conversation', path: '/dialog', icon: <ChatIcon fontSize="small" /> },
+  { text: 'Conversation', path: '/dialog', icon: <ChatIcon fontSize="small" /> },
   // { text: 'Community', path: '/community', icon: <PeopleIcon fontSize="small" /> },
   // { text: 'Analytics', path: '/analytics', icon: <AnalyticsIcon fontSize="small" /> },
 ];
